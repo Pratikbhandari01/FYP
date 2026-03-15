@@ -11,7 +11,8 @@ HOTEL_STATUS=(
     ('pending', 'Pending'),
     ('approved', 'Approved'),
     ('rejected', 'Rejected'),
-    ('blocked', 'Blocked')
+    ('blocked', 'Blocked'),
+    ('live', 'Live')
     )
 
 ICON_TYPE =(

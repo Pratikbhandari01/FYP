@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rooms | HotelBooking</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+:root {
+    --bg: #f4f7fb;
+    --card: #ffffff;
+    --text: #0f172a;
+    --muted: #475569;
+    --primary: #2a9d8f;
+    --primary-hover: #21867a;
+    --nav: rgba(15, 23, 42, 0.85);
+    --footer: #0f172a;
+}
+
+body {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+}
+
+.navbar {
+    background: var(--nav);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(10px);
+}
+
+.navbar a {
+    color: rgba(255, 255, 255, 0.92) !important;
+}
+
+.hero {
+    background: linear-gradient(rgba(15, 23, 42, 0.4), rgba(15, 23, 42, 0.4)),
+        url('https://images.unsplash.com/photo-1521778757829-7c5f82d2b136?auto=format&fit=crop&w=1600&q=80');
+    height: 320px;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.room-card img {
+    height: 220px;
+    object-fit: cover;
+}
+
+.book-btn {
+    background: var(--primary);
+    border: none;
+    color: #fff;
+}
+
+.book-btn:hover {
+    background: var(--primary-hover);
+}
+
+.card {
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    background: var(--card);
+}
+</style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+<div class="container">
+
+<a class="navbar-brand" href="{% url 'hotel:index' %}">HotelBooking</a>
+
+<ul class="navbar-nav ms-auto">
+<li class="nav-item"><a class="nav-link" href="{% url 'hotel:index' %}">Home</a></li>
+<li class="nav-item"><a class="nav-link" href="#">About</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'hotel:rooms' %}">Rooms</a></li>
+<li class="nav-item"><a class="nav-link" href="#">Contact</a></li>
+</ul>
+
+</div>
+</nav>
+
+
+<!-- HERO -->
+<div class="hero">
+<h1>Our Luxury Rooms</h1>
+</div>
+
+
+<!-- ROOMS SECTION -->
+<div class="container mt-5">
+
+  {% if hotels %}
+  <div class="row">
+    {% for hotel in hotels %}
+    <div class="col-md-4 mb-4">
+      <div class="card room-card shadow">
+        {% if hotel.image %}
+        <img src="{{ hotel.image.url }}" class="card-img-top" alt="{{ hotel.name }}">
+        {% else %}
+        <img src="https://via.placeholder.com/400x200?text=No+Image" class="card-img-top" alt="No Image">
+        {% endif %}
+
+        <div class="card-body">
+          <h5 class="card-title">{{ hotel.name }}</h5>
+          <p class="card-text">{{ hotel.description|truncatechars:120 }}</p>
+          {% if hotel.location %}
+          <p class="mb-1"><strong>Location:</strong> {{ hotel.location }}</p>
+          {% endif %}
+          <a href="#" class="btn btn-primary book-btn">View Details</a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="alert alert-info">No hotels are available right now. Please check back later.</div>
+  {% endif %}
+
+
+<!-- FOOTER -->
+<footer class="bg-dark text-white text-center p-3 mt-5">
+© 2026 HotelBooking. All Rights Reserved.
+</footer>
+
+</body>
+</html>
+
