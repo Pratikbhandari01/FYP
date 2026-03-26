@@ -1,0 +1,284 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static log admin_dashboard_tags %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  .custom-admin-dashboard {
+    padding: 0.25rem 0 1rem;
+  }
+
+  .dash-alert {
+    border: 1px solid #bde6c9;
+    background: #eaf9f0;
+    color: #205f36;
+    border-radius: 10px;
+    padding: 0.85rem 1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.9rem;
+    margin-bottom: 1rem;
+  }
+
+  .stat-card {
+    border-radius: 12px;
+    padding: 1rem;
+    color: #ffffff;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    min-height: 110px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-card::after {
+    content: "";
+    position: absolute;
+    right: -24px;
+    bottom: -24px;
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  .stat-card h3 {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 700;
+  }
+
+  .stat-card p {
+    margin: 0.15rem 0 0;
+    opacity: 0.95;
+    font-size: 0.95rem;
+  }
+
+  .stat-blue { background: linear-gradient(135deg, #2c7be5, #1f66ca); }
+  .stat-cyan { background: linear-gradient(135deg, #24b7d7, #0f9ab8); }
+  .stat-amber { background: linear-gradient(135deg, #f3a61d, #de8f08); }
+  .stat-red { background: linear-gradient(135deg, #e95d71, #cc4458); }
+
+  .dashboard-main {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1rem;
+  }
+
+  .panel-card {
+    background: #ffffff;
+    border: 1px solid #dbe7f1;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(28, 57, 87, 0.08);
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .panel-card h4 {
+    margin: 0 0 0.8rem;
+    font-size: 1.1rem;
+    color: #173042;
+    font-weight: 700;
+  }
+
+  .metric-list {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .metric-item {
+    border: 1px solid #e3edf5;
+    border-radius: 10px;
+    padding: 0.8rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .metric-item .value {
+    color: #0f4f78;
+    font-weight: 700;
+    font-size: 1.2rem;
+  }
+
+  .spark-bars {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 6px;
+    height: 140px;
+    align-items: end;
+  }
+
+  .spark-bars span {
+    display: block;
+    border-radius: 6px 6px 0 0;
+    background: linear-gradient(180deg, #5aa9e6, #3f8ecb);
+  }
+
+  .quick-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  .quick-box {
+    border: 1px solid #d8e5ef;
+    border-radius: 10px;
+    padding: 0.85rem;
+    text-align: center;
+    background: #fbfdff;
+  }
+
+  .quick-box .num {
+    display: block;
+    font-size: 1.3rem;
+    color: #134866;
+    font-weight: 700;
+  }
+
+  .recent-actions-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.65rem;
+  }
+
+  .recent-actions-list li {
+    border: 1px solid #dde9f3;
+    border-radius: 10px;
+    padding: 0.65rem 0.8rem;
+    background: #ffffff;
+  }
+
+  .recent-actions-list .meta {
+    font-size: 0.82rem;
+    color: #5f7486;
+  }
+
+  @media (max-width: 1199px) {
+    .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .dashboard-main { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 640px) {
+    .stats-grid { grid-template-columns: 1fr; }
+    .quick-grid { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="custom-admin-dashboard">
+  {% get_model_count "hotel" "hotel" as hotel_count %}
+  {% get_model_count "hotel" "room" as room_count %}
+  {% get_model_count "hotel" "booking" as booking_count %}
+  {% get_model_count "userauths" "user" as user_count %}
+
+  <div class="dash-alert">
+    Success: Welcome back. Your hotel management dashboard is ready.
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card stat-blue">
+      <h3>{{ hotel_count }}</h3>
+      <p>Total Hotels</p>
+    </div>
+    <div class="stat-card stat-cyan">
+      <h3>{{ room_count }}</h3>
+      <p>Total Rooms</p>
+    </div>
+    <div class="stat-card stat-amber">
+      <h3>{{ booking_count }}</h3>
+      <p>Total Bookings</p>
+    </div>
+    <div class="stat-card stat-red">
+      <h3>{{ user_count }}</h3>
+      <p>Total Users</p>
+    </div>
+  </div>
+
+  <div class="dashboard-main">
+    <div>
+      <div class="panel-card">
+        <h4>Booking Trend</h4>
+        <div class="spark-bars" aria-hidden="true">
+          <span style="height:34%"></span>
+          <span style="height:46%"></span>
+          <span style="height:58%"></span>
+          <span style="height:42%"></span>
+          <span style="height:71%"></span>
+          <span style="height:54%"></span>
+          <span style="height:66%"></span>
+          <span style="height:40%"></span>
+          <span style="height:73%"></span>
+          <span style="height:61%"></span>
+          <span style="height:68%"></span>
+          <span style="height:52%"></span>
+        </div>
+      </div>
+
+      <div class="panel-card">
+        <h4>Application Modules</h4>
+        {% if app_list %}
+          <div class="metric-list">
+            {% for app in app_list %}
+              <div class="metric-item">
+                <span>{{ app.name }}</span>
+                <span class="meta">{{ app.models|length }} models</span>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p>No modules available.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div>
+      <div class="panel-card">
+        <h4>Quick Overview</h4>
+        <div class="quick-grid">
+          <div class="quick-box">
+            <span class="num">{{ booking_count }}</span>
+            Bookings
+          </div>
+          <div class="quick-box">
+            <span class="num">{{ room_count }}</span>
+            Rooms
+          </div>
+          <div class="quick-box">
+            <span class="num">{{ hotel_count }}</span>
+            Hotels
+          </div>
+          <div class="quick-box">
+            <span class="num">{{ user_count }}</span>
+            Users
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-card">
+        <h4>Recent Actions</h4>
+        {% get_admin_log 8 as admin_log for_user user %}
+        {% if admin_log %}
+          <ul class="recent-actions-list">
+            {% for entry in admin_log %}
+              <li>
+                <div>{{ entry.object_repr|truncatechars:42 }}</div>
+                <div class="meta">{{ entry.content_type }} - {{ entry.action_time|date:"M d, Y H:i" }}</div>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p>No recent actions.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
