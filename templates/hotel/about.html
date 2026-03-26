@@ -1,0 +1,32 @@
+{% extends 'hotel/base.html' %}
+
+{% block title %}About | Hotel Booking{% endblock %}
+
+{% block content %}
+<section class="hero mb-4">
+    <h1 class="h3 mb-2">About Hotel Booking</h1>
+    <p class="mb-0 text-secondary">We connect travelers with reliable hotels and smooth booking experiences.</p>
+</section>
+
+<div class="row g-4 align-items-center">
+    <div class="col-lg-6">
+        <div class="card p-4 shadow-sm h-100">
+            <h2 class="h4 mb-3">Our Story</h2>
+            <p class="text-secondary mb-3">
+                Hotel Booking was built to make finding rooms easier, faster, and transparent for everyone.
+                From last-minute city breaks to long holidays, we help guests discover great stays.
+            </p>
+            <p class="text-secondary mb-4">
+                We focus on trust, responsive support, and a clean booking journey that works on every device.
+            </p>
+            <a href="{% url 'hotel:hotel_list' %}" class="btn btn-primary">Explore Hotels</a>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card shadow-sm overflow-hidden">
+            <img src="https://images.unsplash.com/photo-1517263904808-5dc06c0c6d99?auto=format&fit=crop&w=1400&q=80" class="img-fluid object-cover" style="height: 360px; width: 100%;" alt="Hotel lobby">
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends 'hotel/base.html' %}
+
+{% block title %}Contact | Hotel Booking{% endblock %}
+
+{% block content %}
+<section class="hero mb-4">
+    <h1 class="h3 mb-2">Contact Us</h1>
+    <p class="mb-0 text-secondary">Have a question? Send us a message and we will reply quickly.</p>
+</section>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card shadow-sm p-4 h-100">
+            <h2 class="h5 mb-3">Send a Message</h2>
+            <form method="post" novalidate>
+                {% csrf_token %}
+                {{ form.non_field_errors }}
+
+                <div class="mb-3">
+                    {{ form.name.label_tag }}
+                    {{ form.name }}
+                    {{ form.name.errors }}
+                </div>
+
+                <div class="mb-3">
+                    {{ form.email.label_tag }}
+                    {{ form.email }}
+                    {{ form.email.errors }}
+                </div>
+
+                <div class="mb-3">
+                    {{ form.subject.label_tag }}
+                    {{ form.subject }}
+                    {{ form.subject.errors }}
+                </div>
+
+                <div class="mb-3">
+                    {{ form.message.label_tag }}
+                    {{ form.message }}
+                    {{ form.message.errors }}
+                </div>
+
+                <button class="btn btn-primary" type="submit">Send Message</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card shadow-sm p-4 h-100">
+            <h2 class="h5 mb-3">Office Details</h2>
+            <p class="text-secondary mb-3">Reach us anytime for booking support and account help.</p>
+            <p class="mb-1"><strong>Email:</strong> support@hotelbooking.example</p>
+            <p class="mb-1"><strong>Phone:</strong> +1 (555) 123-4567</p>
+            <p class="mb-0"><strong>Address:</strong> 123 Main St, Suite 100, Anytown, USA</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

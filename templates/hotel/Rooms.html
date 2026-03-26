@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rooms | HotelBooking</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+:root {
+    --bg: #f7f9fb;
+    --card: #ffffff;
+    --text: #203647;
+    --muted: #617d98;
+    --primary: #799496;
+    --primary-hover: #5f806f;
+    --nav: rgba(255, 255, 255, 0.90);
+    --footer: #203647;
+}
+
+body {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+}
+
+.navbar {
+    background: var(--nav);
+    color: var(--text);
+    box-shadow: none;
+}
+
+.card {
+    border: 1px solid #dbe6ee;
+    background: var(--card);
+    border-radius: 10px;
+}
+
+.hero {
+    background: linear-gradient(rgba(128, 168, 180, 0.5), rgba(128, 168, 180, 0.5)),
+        url('https://images.unsplash.com/photo-1521778757829-7c5f82d2b136?auto=format&fit=crop&w=1600&q=80');
+    color: #fff;
+}
+
+.book-btn {
+    background: var(--primary);
+    border: none;
+    color: #fff;
+}
+
+.book-btn:hover {
+    background: var(--primary-hover);
+}
+
+.navbar {
+    background: var(--nav);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(10px);
+}
+
+.navbar a {
+    color: rgba(255, 255, 255, 0.92) !important;
+}
+
+.hero {
+    background: linear-gradient(rgba(15, 23, 42, 0.4), rgba(15, 23, 42, 0.4)),
+        url('https://images.unsplash.com/photo-1521778757829-7c5f82d2b136?auto=format&fit=crop&w=1600&q=80');
+    height: 320px;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.room-card img {
+    height: 220px;
+    object-fit: cover;
+}
+
+.book-btn {
+    background: var(--primary);
+    border: none;
+    color: #fff;
+}
+
+.book-btn:hover {
+    background: var(--primary-hover);
+}
+
+.card {
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    background: var(--card);
+}
+</style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+<div class="container">
+
+<a class="navbar-brand" href="{% url 'hotel:index' %}">Nepstay.com</a>
+
+<ul class="navbar-nav ms-auto">
+<li class="nav-item"><a class="nav-link" href="{% url 'hotel:index' %}">Home</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'hotel:about' %}">About</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'hotel:rooms' %}">Rooms</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'hotel:contact' %}">Contact</a></li>
+</ul>
+
+</div>
+</nav>
+
+{% if messages %}
+<div class="container mt-3">
+  {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}" role="alert">{{ message }}</div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- HERO -->
+<div class="hero">
+<h1>Our Luxury Rooms</h1>
+</div>
+
+
+<!-- ROOMS SECTION -->
+<div class="container mt-5">
+
+  {% if hotels %}
+    {% for hotel in hotels %}
+    <div class="mb-5">
+      <h2>{{ hotel.name }}</h2>
+      <p>{{ hotel.description|truncatechars:180 }}</p>
+      <p><strong>Location:</strong> {{ hotel.location }}</p>
+
+      {% if hotel.available_rooms %}
+          <div class="row">
+            {% for room in hotel.available_rooms %}
+              <div class="col-md-6 mb-4">
+                <div class="card room-card border-0 shadow-sm">
+                  <div class="card-body">
+                    <h5 class="card-title">Room {{ room.room_number }} - {{ room.room_type.name }}</h5>
+                    <p class="mb-1"><strong>Beds:</strong> {{ room.room_type.no_of_beds }}</p>
+                    <p class="mb-1"><strong>Price:</strong> ${{ room.room_type.price }}</p>
+                    <p class="mb-1 text-success">Status: Available</p>
+                    <a href="{% url 'hotel:book_room' room.id %}" class="btn btn-primary book-btn">Book Now</a>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="alert alert-warning">No available rooms in this hotel right now.</div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  {% else %}
+  <div class="alert alert-info">No hotels are available right now. Please check back later.</div>
+  {% endif %}
+
+
+<!-- FOOTER -->
+<footer class="bg-dark text-white text-center p-3 mt-5">
+© 2026 HotelBooking. All Rights Reserved.
+</footer>
+
+</body>
+</html>
+
