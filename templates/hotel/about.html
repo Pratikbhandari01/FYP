@@ -1,32 +1,146 @@
-{% extends 'hotel/base.html' %}
+{% extends "hotel/base.html" %}
+{% load static %}
 
-{% block title %}About | Hotel Booking{% endblock %}
+{% block title %}About Us | Nepstay{% endblock %}
 
 {% block content %}
-<section class="hero mb-4">
-    <h1 class="h3 mb-2">About Hotel Booking</h1>
-    <p class="mb-0 text-secondary">We connect travelers with reliable hotels and smooth booking experiences.</p>
+
+<!-- Hero Section -->
+<section class="hero hero-bg" style="background-image: url('/media/images/image.png'); min-height: 60vh;">
+    <div class="hero-content text-center">
+        <h1>About Nepstay</h1>
+        <p>Your Trusted Partner for Premium Hotel Accommodations</p>
+    </div>
 </section>
 
-<div class="row g-4 align-items-center">
-    <div class="col-lg-6">
-        <div class="card p-4 shadow-sm h-100">
-            <h2 class="h4 mb-3">Our Story</h2>
-            <p class="text-secondary mb-3">
-                Hotel Booking was built to make finding rooms easier, faster, and transparent for everyone.
-                From last-minute city breaks to long holidays, we help guests discover great stays.
-            </p>
-            <p class="text-secondary mb-4">
-                We focus on trust, responsive support, and a clean booking journey that works on every device.
-            </p>
-            <a href="{% url 'hotel:hotel_list' %}" class="btn btn-primary">Explore Hotels</a>
+<!-- Story Section -->
+<section class="section">
+    <div class="container">
+        <div class="row g-5 align-items-center">
+            <div class="col-lg-6">
+                <img src="/media/images/image.png" alt="About Nepstay" style="border-radius: 1rem; box-shadow: 0 20px 40px rgba(0,0,0,0.1); width: 100%; max-height: 400px; object-fit: cover;">
+            </div>
+            <div class="col-lg-6">
+                <h2 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 1.5rem; color: var(--text-primary);">
+                    Our Story
+                </h2>
+                <p style="font-size: 1.1rem; line-height: 1.8; color: var(--text-secondary); margin-bottom: 1rem;">
+                    Founded in 2024, Nepstay was created with a simple mission: to make premium hotel bookings accessible, affordable, and convenient for everyone. We believe that everyone deserves to experience luxury accommodations without breaking the bank.
+                </p>
+                <p style="font-size: 1.1rem; line-height: 1.8; color: var(--text-secondary);">
+                    Today, we partner with hundreds of premium hotels worldwide, offering our customers the best rates and exclusive deals. Our platform is trusted by thousands of travelers who choose us for our reliability, transparency, and exceptional customer service.
+                </p>
+            </div>
         </div>
     </div>
+</section>
 
-    <div class="col-lg-6">
-        <div class="card shadow-sm overflow-hidden">
-            <img src="https://images.unsplash.com/photo-1517263904808-5dc06c0c6d99?auto=format&fit=crop&w=1400&q=80" class="img-fluid object-cover" style="height: 360px; width: 100%;" alt="Hotel lobby">
+<!-- Values Section -->
+<section class="section bg-light">
+    <div class="container">
+        <h2 class="section-title">Our Core Values</h2>
+        <p class="section-subtitle">What drives us every day</p>
+        
+        <div class="row g-4 mt-5">
+            <div class="col-md-6 col-lg-3">
+                <div class="text-center">
+                    <div style="font-size: 3.5rem; color: var(--primary); margin-bottom: 1rem;">
+                        <i class="bi bi-heart"></i>
+                    </div>
+                    <h5 style="font-weight: 700; margin-bottom: 1rem;">Customer First</h5>
+                    <p class="text-muted">We put our customers at the heart of everything we do</p>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-3">
+                <div class="text-center">
+                    <div style="font-size: 3.5rem; color: var(--primary); margin-bottom: 1rem;">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+                    <h5 style="font-weight: 700; margin-bottom: 1rem;">Trust & Security</h5>
+                    <p class="text-muted">Your security and privacy are our top priorities</p>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-3">
+                <div class="text-center">
+                    <div style="font-size: 3.5rem; color: var(--primary); margin-bottom: 1rem;">
+                        <i class="bi bi-gem"></i>
+                    </div>
+                    <h5 style="font-weight: 700; margin-bottom: 1rem;">Quality</h5>
+                    <p class="text-muted">We partner only with the best hotels for you</p>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-3">
+                <div class="text-center">
+                    <div style="font-size: 3.5rem; color: var(--primary); margin-bottom: 1rem;">
+                        <i class="bi bi-lightning-charge"></i>
+                    </div>
+                    <h5 style="font-weight: 700; margin-bottom: 1rem;">Innovation</h5>
+                    <p class="text-muted">Constantly improving our platform for you</p>
+                </div>
+            </div>
         </div>
     </div>
-</div>
+</section>
+
+<!-- Team Section -->
+<section class="section">
+    <div class="container">
+        <h2 class="section-title">Our Team</h2>
+        <p class="section-subtitle">Meet the people behind Nepstay</p>
+        
+        <div class="row g-4 mt-5">
+            <div class="col-md-6 col-lg-3">
+                <div class="card text-center">
+                    <div style="height: 200px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; font-size: 3rem; color: white;">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                    <div class="card-body">
+                        <h5 style="font-weight: 700;">Leadership</h5>
+                        <p class="text-muted small">Visionary leaders driving innovation</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-3">
+                <div class="card text-center">
+                    <div style="height: 200px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; font-size: 3rem; color: white;">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                    <div class="card-body">
+                        <h5 style="font-weight: 700;">Engineering</h5>
+                        <p class="text-muted small">Building world-class technology</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-3">
+                <div class="card text-center">
+                    <div style="height: 200px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; font-size: 3rem; color: white;">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                    <div class="card-body">
+                        <h5 style="font-weight: 700;">Customer Support</h5>
+                        <p class="text-muted small">24/7 support team</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-3">
+                <div class="card text-center">
+                    <div style="height: 200px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; font-size: 3rem; color: white;">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                    <div class="card-body">
+                        <h5 style="font-weight: 700;">Marketing</h5>
+                        <p class="text-muted small">Growing our community</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
 {% endblock %}

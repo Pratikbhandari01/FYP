@@ -4,279 +4,496 @@
 {% block extrastyle %}
 {{ block.super }}
 <style>
-  .custom-admin-dashboard {
-    padding: 0.25rem 0 1rem;
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
   }
 
-  .dash-alert {
-    border: 1px solid #bde6c9;
-    background: #eaf9f0;
-    color: #205f36;
-    border-radius: 10px;
-    padding: 0.85rem 1rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
+  #main-content {
+    background: #f8f9fa !important;
+    padding: 30px !important;
   }
 
+  #content {
+    margin: 0 !important;
+  }
+
+  /* Header */
+  #header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    padding: 20px 30px !important;
+    margin-bottom: 30px;
+    border-radius: 12px;
+  }
+
+  #header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: white;
+  }
+
+  /* Dashboard Title */
+  .admin-dashboard h1 {
+    display: none;
+  }
+
+  .admin-dashboard {
+    padding: 0;
+  }
+
+  .page-title {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 8px;
+  }
+
+  .page-subtitle {
+    color: #6b7280;
+    font-size: 0.95rem;
+    font-weight: 400;
+  }
+
+  /* Stats Grid */
   .stats-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0.9rem;
-    margin-bottom: 1rem;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 30px;
   }
 
   .stat-card {
+    background: white;
     border-radius: 12px;
-    padding: 1rem;
-    color: #ffffff;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-    min-height: 110px;
+    padding: 25px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: all 0.3s ease;
+    border-left: 4px solid #667eea;
     position: relative;
-    overflow: hidden;
   }
 
-  .stat-card::after {
-    content: "";
-    position: absolute;
-    right: -24px;
-    bottom: -24px;
-    width: 88px;
-    height: 88px;
+  .stat-card:hover {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+  }
+
+  .stat-card-1 { border-left-color: #667eea; }
+  .stat-card-2 { border-left-color: #06b6d4; }
+  .stat-card-3 { border-left-color: #f59e0b; }
+  .stat-card-4 { border-left-color: #ec4899; }
+
+  .stat-icon {
+    font-size: 3rem;
+    width: 70px;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.15);
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+    flex-shrink: 0;
   }
 
-  .stat-card h3 {
-    margin: 0;
-    font-size: 1.4rem;
+  .stat-content {
+    flex: 1;
+  }
+
+  .stat-label {
+    font-size: 0.8rem;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .stat-value {
+    font-size: 2.2rem;
     font-weight: 700;
+    color: #1f2937;
+    margin: 0;
   }
 
-  .stat-card p {
-    margin: 0.15rem 0 0;
-    opacity: 0.95;
-    font-size: 0.95rem;
-  }
-
-  .stat-blue { background: linear-gradient(135deg, #2c7be5, #1f66ca); }
-  .stat-cyan { background: linear-gradient(135deg, #24b7d7, #0f9ab8); }
-  .stat-amber { background: linear-gradient(135deg, #f3a61d, #de8f08); }
-  .stat-red { background: linear-gradient(135deg, #e95d71, #cc4458); }
-
-  .dashboard-main {
+  /* Dashboard Grid */
+  .dashboard-grid {
     display: grid;
     grid-template-columns: 2fr 1fr;
-    gap: 1rem;
+    gap: 20px;
+    margin-bottom: 30px;
   }
 
-  .panel-card {
-    background: #ffffff;
-    border: 1px solid #dbe7f1;
+  .dashboard-card {
+    background: white;
     border-radius: 12px;
-    box-shadow: 0 6px 20px rgba(28, 57, 87, 0.08);
-    padding: 1rem;
-    margin-bottom: 1rem;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   }
 
-  .panel-card h4 {
-    margin: 0 0 0.8rem;
-    font-size: 1.1rem;
-    color: #173042;
-    font-weight: 700;
-  }
-
-  .metric-list {
-    display: grid;
-    gap: 0.75rem;
-  }
-
-  .metric-item {
-    border: 1px solid #e3edf5;
-    border-radius: 10px;
-    padding: 0.8rem;
+  .card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 18px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
 
-  .metric-item .value {
-    color: #0f4f78;
+  .card-title {
+    font-size: 1.1rem;
     font-weight: 700;
-    font-size: 1.2rem;
-  }
-
-  .spark-bars {
-    display: grid;
-    grid-template-columns: repeat(12, 1fr);
-    gap: 6px;
-    height: 140px;
-    align-items: end;
-  }
-
-  .spark-bars span {
-    display: block;
-    border-radius: 6px 6px 0 0;
-    background: linear-gradient(180deg, #5aa9e6, #3f8ecb);
-  }
-
-  .quick-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.75rem;
-  }
-
-  .quick-box {
-    border: 1px solid #d8e5ef;
-    border-radius: 10px;
-    padding: 0.85rem;
-    text-align: center;
-    background: #fbfdff;
-  }
-
-  .quick-box .num {
-    display: block;
-    font-size: 1.3rem;
-    color: #134866;
-    font-weight: 700;
-  }
-
-  .recent-actions-list {
-    list-style: none;
     margin: 0;
-    padding: 0;
-    display: grid;
-    gap: 0.65rem;
   }
 
-  .recent-actions-list li {
-    border: 1px solid #dde9f3;
-    border-radius: 10px;
-    padding: 0.65rem 0.8rem;
-    background: #ffffff;
+  .view-all {
+    color: white;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    opacity: 0.9;
+    transition: opacity 0.3s;
   }
 
-  .recent-actions-list .meta {
-    font-size: 0.82rem;
-    color: #5f7486;
+  .view-all:hover {
+    opacity: 1;
   }
 
-  @media (max-width: 1199px) {
-    .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .dashboard-main { grid-template-columns: 1fr; }
+  /* Card Body */
+  .card-body {
+    padding: 20px;
+  }
+
+  /* Table Styling */
+  .table-wrapper {
+    overflow-x: auto;
+  }
+
+  .dashboard-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .dashboard-table thead {
+    background: #f9fafb;
+  }
+
+  .dashboard-table thead th {
+    padding: 14px 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #6b7280;
+    border: none;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .dashboard-table tbody tr {
+    border-bottom: 1px solid #e5e7eb;
+    transition: background 0.2s;
+  }
+
+  .dashboard-table tbody tr:hover {
+    background: #f9fafb;
+  }
+
+  .dashboard-table tbody td {
+    padding: 14px 12px;
+    color: #6b7280;
+    font-size: 0.95rem;
+  }
+
+  .guest-name {
+    font-weight: 600;
+    color: #1f2937;
+  }
+
+  /* Badges */
+  .badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  .badge-success {
+    background: #dcfce7;
+    color: #166534;
+  }
+
+  .badge-warning {
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  .badge-danger {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+
+  .badge-info {
+    background: #cffafe;
+    color: #164e63;
+  }
+
+  /* Customers List */
+  .customers-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .customer-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 8px;
+    transition: background 0.2s;
+  }
+
+  .customer-item:hover {
+    background: #f9fafb;
+  }
+
+  .customer-avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.95rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .avatar-1 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+  .avatar-2 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+  .avatar-3 { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+  .avatar-4 { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+  .avatar-5 { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+
+  .customer-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .customer-name {
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0 0 3px 0;
+    font-size: 0.95rem;
+  }
+
+  .customer-email {
+    color: #9ca3af;
+    margin: 0;
+    font-size: 0.8rem;
+  }
+
+  /* Responsive */
+  @media (max-width: 1024px) {
+    .stats-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .dashboard-grid {
+      grid-template-columns: 1fr;
+    }
   }
 
   @media (max-width: 640px) {
-    .stats-grid { grid-template-columns: 1fr; }
-    .quick-grid { grid-template-columns: 1fr; }
+    #main-content {
+      padding: 15px !important;
+    }
+
+    .stats-grid {
+      grid-template-columns: 1fr;
+      gap: 15px;
+    }
+
+    .stat-card {
+      padding: 20px;
+      gap: 15px;
+    }
+
+    .stat-icon {
+      width: 60px;
+      height: 60px;
+      font-size: 2.5rem;
+    }
+
+    .stat-value {
+      font-size: 1.8rem;
+    }
+
+    .page-title {
+      font-size: 1.8rem;
+    }
+
+    .card-header {
+      padding: 15px;
+    }
+
+    .card-title {
+      font-size: 1rem;
+    }
+
+    .dashboard-table {
+      font-size: 0.85rem;
+    }
+
+    .dashboard-table td,
+    .dashboard-table th {
+      padding: 10px 8px;
+    }
   }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="custom-admin-dashboard">
+<div class="admin-dashboard">
   {% get_model_count "hotel" "hotel" as hotel_count %}
   {% get_model_count "hotel" "room" as room_count %}
   {% get_model_count "hotel" "booking" as booking_count %}
   {% get_model_count "userauths" "user" as user_count %}
 
-  <div class="dash-alert">
-    Success: Welcome back. Your hotel management dashboard is ready.
-  </div>
-
+  <!-- Stats Cards -->
   <div class="stats-grid">
-    <div class="stat-card stat-blue">
-      <h3>{{ hotel_count }}</h3>
-      <p>Total Hotels</p>
+    <div class="stat-card stat-card-1">
+      <div class="stat-icon">🏢</div>
+      <div class="stat-content">
+        <p class="stat-label">Total Hotels</p>
+        <h3 class="stat-value">{{ hotel_count|default:"0" }}</h3>
+      </div>
     </div>
-    <div class="stat-card stat-cyan">
-      <h3>{{ room_count }}</h3>
-      <p>Total Rooms</p>
+
+    <div class="stat-card stat-card-2">
+      <div class="stat-icon">🚪</div>
+      <div class="stat-content">
+        <p class="stat-label">Total Rooms</p>
+        <h3 class="stat-value">{{ room_count|default:"0" }}</h3>
+      </div>
     </div>
-    <div class="stat-card stat-amber">
-      <h3>{{ booking_count }}</h3>
-      <p>Total Bookings</p>
+
+    <div class="stat-card stat-card-3">
+      <div class="stat-icon">📦</div>
+      <div class="stat-content">
+        <p class="stat-label">Total Bookings</p>
+        <h3 class="stat-value">{{ booking_count|default:"0" }}</h3>
+      </div>
     </div>
-    <div class="stat-card stat-red">
-      <h3>{{ user_count }}</h3>
-      <p>Total Users</p>
+
+    <div class="stat-card stat-card-4">
+      <div class="stat-icon">👥</div>
+      <div class="stat-content">
+        <p class="stat-label">Total Users</p>
+        <h3 class="stat-value">{{ user_count|default:"0" }}</h3>
+      </div>
     </div>
   </div>
 
-  <div class="dashboard-main">
-    <div>
-      <div class="panel-card">
-        <h4>Booking Trend</h4>
-        <div class="spark-bars" aria-hidden="true">
-          <span style="height:34%"></span>
-          <span style="height:46%"></span>
-          <span style="height:58%"></span>
-          <span style="height:42%"></span>
-          <span style="height:71%"></span>
-          <span style="height:54%"></span>
-          <span style="height:66%"></span>
-          <span style="height:40%"></span>
-          <span style="height:73%"></span>
-          <span style="height:61%"></span>
-          <span style="height:68%"></span>
-          <span style="height:52%"></span>
-        </div>
+  <!-- Main Grid -->
+  <div class="dashboard-grid">
+    <!-- Recent Bookings -->
+    <div class="dashboard-card">
+      <div class="card-header">
+        <h2 class="card-title">Recent Bookings</h2>
+        <a href="/admin/hotel/booking/" class="view-all">View All</a>
       </div>
-
-      <div class="panel-card">
-        <h4>Application Modules</h4>
-        {% if app_list %}
-          <div class="metric-list">
-            {% for app in app_list %}
-              <div class="metric-item">
-                <span>{{ app.name }}</span>
-                <span class="meta">{{ app.models|length }} models</span>
-              </div>
-            {% endfor %}
-          </div>
-        {% else %}
-          <p>No modules available.</p>
-        {% endif %}
+      <div class="card-body">
+        <div class="table-wrapper">
+          <table class="dashboard-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Hotel</th>
+                <th>Amount</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="guest-name">Sarah Richardson</span></td>
+                <td>Luxury Suite</td>
+                <td>$1,200</td>
+                <td><span class="badge badge-success">Confirmed</span></td>
+              </tr>
+              <tr>
+                <td><span class="guest-name">Michael Stewart</span></td>
+                <td>Standard Room</td>
+                <td>$150</td>
+                <td><span class="badge badge-warning">Pending</span></td>
+              </tr>
+              <tr>
+                <td><span class="guest-name">Emma Wilson</span></td>
+                <td>Deluxe Room</td>
+                <td>$820</td>
+                <td><span class="badge badge-success">Paid</span></td>
+              </tr>
+              <tr>
+                <td><span class="guest-name">John Davis</span></td>
+                <td>Standard Room</td>
+                <td>$150</td>
+                <td><span class="badge badge-danger">Due</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <div>
-      <div class="panel-card">
-        <h4>Quick Overview</h4>
-        <div class="quick-grid">
-          <div class="quick-box">
-            <span class="num">{{ booking_count }}</span>
-            Bookings
+    <!-- Recent Customers -->
+    <div class="dashboard-card">
+      <div class="card-header">
+        <h2 class="card-title">Recent Customers</h2>
+        <a href="/admin/userauths/user/" class="view-all">View All</a>
+      </div>
+      <div class="card-body">
+        <div class="customers-list">
+          <div class="customer-item">
+            <div class="customer-avatar avatar-1">DR</div>
+            <div class="customer-info">
+              <p class="customer-name">David Johnson</p>
+              <p class="customer-email">david@example.com</p>
+            </div>
           </div>
-          <div class="quick-box">
-            <span class="num">{{ room_count }}</span>
-            Rooms
+          <div class="customer-item">
+            <div class="customer-avatar avatar-2">MK</div>
+            <div class="customer-info">
+              <p class="customer-name">Muhammad Khan</p>
+              <p class="customer-email">mkhan@example.com</p>
+            </div>
           </div>
-          <div class="quick-box">
-            <span class="num">{{ hotel_count }}</span>
-            Hotels
+          <div class="customer-item">
+            <div class="customer-avatar avatar-3">AC</div>
+            <div class="customer-info">
+              <p class="customer-name">Amelia Carter</p>
+              <p class="customer-email">amelia@example.com</p>
+            </div>
           </div>
-          <div class="quick-box">
-            <span class="num">{{ user_count }}</span>
-            Users
+          <div class="customer-item">
+            <div class="customer-avatar avatar-4">SW</div>
+            <div class="customer-info">
+              <p class="customer-name">Sarah White</p>
+              <p class="customer-email">sarah@example.com</p>
+            </div>
+          </div>
+          <div class="customer-item">
+            <div class="customer-avatar avatar-5">JA</div>
+            <div class="customer-info">
+              <p class="customer-name">James Anderson</p>
+              <p class="customer-email">james@example.com</p>
+            </div>
           </div>
         </div>
-      </div>
-
-      <div class="panel-card">
-        <h4>Recent Actions</h4>
-        {% get_admin_log 8 as admin_log for_user user %}
-        {% if admin_log %}
-          <ul class="recent-actions-list">
-            {% for entry in admin_log %}
-              <li>
-                <div>{{ entry.object_repr|truncatechars:42 }}</div>
-                <div class="meta">{{ entry.content_type }} - {{ entry.action_time|date:"M d, Y H:i" }}</div>
-              </li>
-            {% endfor %}
-          </ul>
-        {% else %}
-          <p>No recent actions.</p>
-        {% endif %}
       </div>
     </div>
   </div>

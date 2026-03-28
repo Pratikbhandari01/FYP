@@ -1,7 +1,59 @@
 from django.contrib import admin
+from django import forms
 from django.urls import reverse
 from django.utils.html import format_html
 from .models import Booking, Hotel, RoomType, Room
+
+
+
+
+
+
+class RoomAdminForm(forms.ModelForm):
+    class Meta:
+        model = Room
+        fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Get hotel_id from instance first (for editing existing rooms)
+        hotel_id = None
+        if self.instance and self.instance.pk and self.instance.hotel_id:
+            hotel_id = self.instance.hotel_id
+        
+        # Then check POST/GET data (for form submission)
+        if self.data and 'hotel' in self.data:
+            try:
+                hotel_id = int(self.data.get('hotel'))
+            except (ValueError, TypeError):
+                pass
+        
+        # Filter room_type queryset based on hotel
+        if hotel_id:
+            room_type_qs = RoomType.objects.filter(hotel_id=hotel_id).order_by('name')
+            self.fields['room_type'].queryset = room_type_qs
+            self.fields['room_type'].help_text = 'Available room types for selected hotel'
+        else:
+            # Show all room types if no hotel selected yet
+            self.fields['room_type'].queryset = RoomType.objects.all().order_by('name')
+            self.fields['room_type'].help_text = 'Select a hotel first to see available room types'
+
+    def clean(self):
+        cleaned_data = super().clean()
+        hotel = cleaned_data.get('hotel')
+        room_type = cleaned_data.get('room_type')
+
+        if hotel and room_type and room_type.hotel_id != hotel.id:
+            raise forms.ValidationError(
+                'Selected room type does not belong to the selected hotel. Please choose a room type from the same hotel.'
+            )
+
+        # Auto-assign hotel from room_type if not set
+        if room_type and not hotel:
+            cleaned_data['hotel'] = room_type.hotel
+
+        return cleaned_data
 
 
 class RoomInline(admin.TabularInline):
@@ -10,6 +62,29 @@ class RoomInline(admin.TabularInline):
     fields = ('room_type', 'room_number', 'price', 'availability', 'is_available', 'date')
     readonly_fields = ('date',)
     show_change_link = True
+    form = RoomAdminForm
+
+    def get_formset(self, request, obj=None, **kwargs):
+        formset = super().get_formset(request, obj, **kwargs)
+        # If this is a specific hotel, filter room_types for that hotel
+        if obj:
+            for form in formset.forms:
+                form.fields['room_type'].queryset = RoomType.objects.filter(hotel=obj)
+        return formset
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'room_type':
+            object_id = request.resolver_match.kwargs.get('object_id')
+            if object_id:
+                kwargs['queryset'] = RoomType.objects.filter(hotel_id=object_id)
+            else:
+                kwargs['queryset'] = RoomType.objects.none()
+        elif db_field.name == 'hotel':
+            # Always restrict hotel to the parent hotel
+            object_id = request.resolver_match.kwargs.get('object_id')
+            if object_id:
+                kwargs['queryset'] = Hotel.objects.filter(id=object_id)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 @admin.register(Hotel)
@@ -43,14 +118,24 @@ class HotelAdmin(admin.ModelAdmin):
 
 @admin.register(Room)
 class RoomAdmin(admin.ModelAdmin):
+    form = RoomAdminForm
     list_display = ['room_number', 'hotel', 'room_type', 'price', 'availability', 'date', 'manage_actions']
     list_filter = ['hotel', 'room_type', 'availability']
-    search_fields = ['room_number', 'hotel__name', 'room_type__name']
+    search_fields = ['room_number', 'hotel__name', 'hotel__location', 'hotel__address', 'room_type__name']
     list_editable = ['price', 'availability']
     list_per_page = 25
     ordering = ['-date']
-    autocomplete_fields = ['hotel', 'room_type']
+    autocomplete_fields = ['hotel']
     actions = ['mark_available', 'mark_unavailable']
+    
+    class Media:
+        js = ('admin/js/room_admin.js',)
+
+    def save_model(self, request, obj, form, change):
+        if obj.room_type_id and obj.hotel_id != obj.room_type.hotel_id:
+            obj.hotel = obj.room_type.hotel
+        obj.is_available = obj.availability
+        super().save_model(request, obj, form, change)
 
     def manage_actions(self, obj):
         change_url = reverse('admin:hotel_room_change', args=[obj.pk])
@@ -124,6 +209,7 @@ class RoomTypeAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
     list_per_page = 25
     ordering = ['-date']
+    autocomplete_fields = ['hotel']
 
     def manage_actions(self, obj):
         change_url = reverse('admin:hotel_roomtype_change', args=[obj.pk])

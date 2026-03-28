@@ -34,36 +34,34 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ["email"]   # ✅ username हटायो
 
 
-def __str__(self):
-    return self.full_name
+    def __str__(self):
+        return self.full_name or self.username
     
 class Profile(models.Model):
-       pid = models.CharField(max_length=25, unique=True, default=shortuuid.uuid)
-       image = models.FileField(upload_to =user_directory_path,default = "default.png", blank=True, null=True)
-       user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-       full_name = models.CharField(max_length=255, blank=True, null=True )
-       phone = models.CharField(max_length=20, blank=True, null=True)
-       gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default="Others")
+    pid = models.CharField(max_length=25, unique=True, default=shortuuid.uuid)
+    image = models.FileField(upload_to =user_directory_path,default = "default.png", blank=True, null=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    full_name = models.CharField(max_length=255, blank=True, null=True )
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default="Others")
 
+    country = models.CharField(max_length=50, blank=True, null=True)
+    city = models.CharField(max_length=50, blank=True, null=True)
+    address = models.CharField(max_length=255, blank=True, null=True)
+    identity_type = models.CharField(max_length=20, choices=IDENTITY_TYPE, blank=True, null=True)
+    identity_image= models.FileField(upload_to=user_directory_path, blank=True, null=True)
+    wallet = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    verified = models.BooleanField(default=False)
+    date = models.DateTimeField(auto_now_add=True)
 
-       country = models.CharField(max_length=50, blank=True, null=True)
-       city = models.CharField(max_length=50, blank=True, null=True)
-       address = models.CharField(max_length=255, blank=True, null=True)
-       identity_type = models.CharField(max_length=20, choices=IDENTITY_TYPE, blank=True, null=True)
-       identity_image= models.FileField(upload_to=user_directory_path, blank=True, null=True)
-       wallet = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-       verified = models.BooleanField(default=False)
-       date = models.DateTimeField(auto_now_add=True)
+    class Meta:
+        ordering = ['-date']
 
-
-class Meta:
-            ordering = ['-date']
-
-def __str__(self):
-            if self.full_name:
-                return self.full_name
-            else:
-                return self.user.username
+    def __str__(self):
+        if self.full_name:
+            return self.full_name
+        else:
+            return self.user.username
             
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):

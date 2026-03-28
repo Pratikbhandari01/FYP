@@ -1,49 +1,265 @@
 {% extends 'hotel/base.html' %}
 
-{% block title %}Rooms | Hotel Booking{% endblock %}
+{% block title %}Rooms | Nepstay{% endblock %}
+
+{% block extra_css %}
+<style>
+.hero-rooms {
+    padding: 6rem 0 4rem;
+    background: linear-gradient(180deg, rgba(59, 130, 246, 0.92), rgba(30, 64, 175, 0.88)),
+        url('https://images.unsplash.com/photo-1501117716987-c8e37a14ce3b?auto=format&fit=crop&w=1600&q=80') no-repeat center/cover;
+    background-size: cover;
+    color: white;
+    position: relative;
+}
+
+.hero-rooms::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.24), rgba(15, 23, 42, 0.55));
+}
+
+.hero-rooms .container,
+.hero-rooms .hero-text {
+    position: relative;
+    z-index: 1;
+}
+
+.hero-rooms h1 {
+    font-size: clamp(3rem, 5vw, 4.5rem);
+    line-height: 1.02;
+    font-weight: 800;
+    margin-bottom: 1rem;
+}
+
+.hero-rooms p {
+    font-size: 1.1rem;
+    max-width: 680px;
+    margin: 0 auto;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.filter-panel {
+    background: #ffffff;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 1.5rem;
+    padding: 1.75rem;
+    box-shadow: 0 28px 70px rgba(15, 23, 42, 0.08);
+}
+
+.filter-panel label {
+    font-weight: 600;
+}
+
+.filter-panel .form-select,
+.filter-panel .btn {
+    border-radius: 1rem;
+}
+
+.filter-panel .btn {
+    padding: 0.95rem 1.4rem;
+}
+
+.stats-row {
+    background: #f8fafc;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-radius: 1.5rem;
+    padding: 1.5rem 2rem;
+}
+
+.stats-item {
+    min-width: 160px;
+}
+
+.stats-item h3 {
+    font-size: 1.9rem;
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+}
+
+.stats-item p {
+    color: #64748b;
+    margin: 0;
+}
+
+.room-card {
+    border: none;
+    border-radius: 1.6rem;
+    overflow: hidden;
+    transition: transform .25s ease, box-shadow .25s ease;
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
+    background: white;
+}
+
+.room-card:hover {
+    transform: translateY(-6px);
+}
+
+.room-card-media {
+    position: relative;
+    overflow: hidden;
+}
+
+.room-card-media img {
+    width: 100%;
+    height: 280px;
+    object-fit: cover;
+    display: block;
+}
+
+.room-card-tag {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    padding: 0.55rem 0.9rem;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #065f46;
+}
+
+.room-card-body {
+    padding: 1.5rem;
+}
+
+.room-card-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    margin-bottom: 0.55rem;
+}
+
+.room-card-subtitle {
+    color: #475569;
+    margin-bottom: 1.15rem;
+}
+
+.room-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1.45rem;
+}
+
+.room-card-meta span {
+    font-size: 0.95rem;
+    color: #64748b;
+}
+
+.room-price {
+    font-size: 1.55rem;
+    font-weight: 800;
+    color: #111827;
+}
+
+.room-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.room-card-footer .btn {
+    min-width: 140px;
+    border-radius: 999px;
+    padding: 0.85rem 1.2rem;
+}
+
+@media (max-width: 768px) {
+    .hero-rooms h1 {
+        font-size: clamp(2.5rem, 8vw, 3.6rem);
+    }
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<section class="hero mb-4">
-    <h1 class="h4 mb-1">Available Rooms</h1>
-    <p class="text-secondary mb-0">Filter rooms by hotel and book the one you like.</p>
+<section class="hero-rooms">
+    <div class="container text-center hero-text">
+        <p class="text-uppercase text-white-50 mb-3" style="letter-spacing: .35em; font-size: .85rem;">Featured collection</p>
+        <h1>Available Rooms</h1>
+        <p>Filter rooms by hotel, compare amenities, and book the best accommodation in one smooth experience.</p>
+    </div>
 </section>
 
-<div class="card p-3 p-md-4 mb-4">
-    <form method="get" id="roomFilterForm" class="row g-3 align-items-end">
-        <div class="col-md-10">
-            <label for="hotelSelect" class="form-label">Select Hotel</label>
-            <select id="hotelSelect" name="hotel" class="form-select">
-                <option value="">All Hotels</option>
-                {% for hotel in hotels %}
-                <option value="{{ hotel.id }}" {% if selected_hotel_id == hotel.id|stringformat:'s' %}selected{% endif %}>{{ hotel.name }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="col-md-2 d-grid">
-            <button type="submit" class="btn btn-outline-primary"><i class="bi bi-funnel"></i> Filter</button>
-        </div>
-    </form>
-</div>
-
-<div class="row g-4" id="roomsContainer">
-    {% for room in rooms %}
-    <div class="col-md-6 col-xl-4 room-card">
-        <div class="card h-100 shadow-sm">
-            <div class="card-body d-flex flex-column">
-                <h5 class="card-title mb-1">Room {{ room.room_number }}</h5>
-                <p class="mb-1"><strong>Hotel:</strong> {{ room.hotel.name }}</p>
-                <p class="mb-1"><strong>Type:</strong> {{ room.room_type.name }}</p>
-                <p class="mb-2"><strong>Price:</strong> ${{ room.price }}</p>
-                <span class="badge text-bg-success mb-3">Available</span>
-                <a href="{% url 'hotel:book_room' room.id %}" class="btn btn-primary mt-auto"><i class="bi bi-calendar-check"></i> Book Now</a>
+<div class="container py-5">
+    <div class="row g-4 align-items-end mb-4">
+        <div class="col-lg-8">
+            <div class="stats-row d-flex flex-wrap justify-content-between gap-3">
+                <div class="stats-item">
+                    <h3>{{ rooms|length }}</h3>
+                    <p>Available rooms</p>
+                </div>
+                <div class="stats-item">
+                    <h3>{{ hotels|length }}</h3>
+                    <p>Hotels listed</p>
+                </div>
+                <div class="stats-item">
+                    <h3>{% if selected_hotel_id %}{{ selected_hotel_id }}{% else %}All{% endif %}</h3>
+                    <p>Selected hotel</p>
+                </div>
             </div>
         </div>
+        <div class="col-lg-4 text-lg-end">
+            <a href="{% url 'hotel:hotel_list' %}" class="btn btn-outline-primary btn-lg"><i class="bi bi-building"></i> Browse Hotels</a>
+        </div>
     </div>
-    {% empty %}
-    <div class="col-12">
-        <div class="alert alert-info mb-0">No available rooms found for this hotel.</div>
+
+    <div class="filter-panel mb-5">
+        <form method="get" id="roomFilterForm" class="row g-3 align-items-end">
+            <div class="col-md-8">
+                <label for="hotelSelect" class="form-label">Select Hotel</label>
+                <select id="hotelSelect" name="hotel" class="form-select form-select-lg py-3">
+                    <option value="">All Hotels</option>
+                    {% for hotel in hotels %}
+                    <option value="{{ hotel.id }}" {% if selected_hotel_id == hotel.id|stringformat:'s' %}selected{% endif %}>{{ hotel.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4 d-grid">
+                <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-funnel-fill me-2"></i>Filter Rooms</button>
+            </div>
+        </form>
     </div>
-    {% endfor %}
+
+    <div class="row g-4" id="roomsContainer">
+        {% for room in rooms %}
+        <div class="col-sm-6 col-xl-4">
+            <article class="room-card h-100">
+                <div class="room-card-media">
+                    {% if room.room_type.image or room.hotel.image %}
+                        <img src="{% if room.room_type.image %}{{ room.room_type.image.url }}{% else %}{{ room.hotel.image.url }}{% endif %}" alt="{{ room.room_type.name }}">
+                    {% else %}
+                        <img src="https://images.unsplash.com/photo-1501117716987-c8e37a14ce3b?auto=format&fit=crop&w=1200&q=80" alt="Room image">
+                    {% endif %}
+                    <div class="room-card-tag">Available</div>
+                </div>
+                <div class="room-card-body d-flex flex-column">
+                    <p class="text-uppercase text-primary small mb-1">{{ room.hotel.name }}</p>
+                    <h3 class="room-card-title">Room {{ room.room_number }}</h3>
+                    <p class="room-card-subtitle">{{ room.room_type.name }} · {{ room.room_type.no_of_beds }} Bed{{ room.room_type.no_of_beds|pluralize }}</p>
+
+                    <div class="room-card-meta">
+                        <span><i class="bi bi-house-fill me-1"></i>{{ room.hotel.location|default:'City center' }}</span>
+                        <span><i class="bi bi-clock-history me-1"></i>Instant booking</span>
+                    </div>
+
+                    <div class="mt-auto room-card-footer">
+                        <div>
+                            <span class="room-price">${{ room.price }}</span>
+                        </div>
+                        <a href="{% url 'hotel:book_room' room.id %}" class="btn btn-primary">Book Now</a>
+                    </div>
+                </div>
+            </article>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info mb-0">No available rooms found for this hotel.</div>
+        </div>
+        {% endfor %}
+    </div>
 </div>
 {% endblock %}
 
@@ -52,6 +268,8 @@
 (function () {
     const hotelSelect = document.getElementById('hotelSelect');
     const roomsContainer = document.getElementById('roomsContainer');
+
+    if (!hotelSelect) return;
 
     function renderRoomCards(rooms) {
         if (!rooms.length) {
@@ -63,16 +281,22 @@
         }
 
         roomsContainer.innerHTML = rooms.map((room) => `
-            <div class="col-md-6 col-xl-4 room-card">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title mb-1">Room ${room.room_number}</h5>
-                        <p class="mb-1"><strong>Type:</strong> ${room.room_type}</p>
-                        <p class="mb-2"><strong>Price:</strong> $${room.price}</p>
-                        <span class="badge text-bg-success mb-3">Available</span>
-                        <a href="/rooms/book/${room.id}/" class="btn btn-primary mt-auto"><i class="bi bi-calendar-check"></i> Book Now</a>
+            <div class="col-sm-6 col-xl-4">
+                <article class="room-card h-100">
+                    <div class="room-card-media">
+                        <img src="https://images.unsplash.com/photo-1501117716987-c8e37a14ce3b?auto=format&fit=crop&w=1200&q=80" alt="${room.room_type}">
+                        <div class="room-card-tag">Available</div>
                     </div>
-                </div>
+                    <div class="room-card-body d-flex flex-column">
+                        <p class="text-uppercase text-primary small mb-1">Selected Hotel</p>
+                        <h3 class="room-card-title">Room ${room.room_number}</h3>
+                        <p class="room-card-subtitle">${room.room_type}</p>
+                        <div class="mt-auto room-card-footer">
+                            <div><span class="room-price">$${room.price}</span></div>
+                            <a href="/rooms/book/${room.id}/" class="btn btn-primary">Book Now</a>
+                        </div>
+                    </div>
+                </article>
             </div>`).join('');
     }
 

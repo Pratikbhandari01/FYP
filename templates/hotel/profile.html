@@ -1,0 +1,170 @@
+{% extends "hotel/base.html" %}
+{% load static %}
+
+{% block title %}Profile | Nepstay{% endblock %}
+
+{% block content %}
+
+<section class="section">
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="section-title">My Profile</h1>
+                <p class="section-subtitle">Manage your account settings and bookings</p>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Profile Card -->
+            <div class="col-lg-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <i class="bi bi-person-circle"></i> Profile Information
+                    </div>
+                    <div class="card-body text-center">
+                        <div style="width: 100px; height: 100px; margin: 0 auto 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem;">
+                            <i class="bi bi-person-fill"></i>
+                        </div>
+                        
+                        <h4>{{ user.username }}</h4>
+                        <p class="text-muted">{{ user.email }}</p>
+                        
+                        {% if user.full_name %}
+                        <p class="text-secondary"><strong>Name:</strong> {{ user.full_name }}</p>
+                        {% endif %}
+                        
+                        {% if user.phone %}
+                        <p class="text-secondary"><strong>Phone:</strong> {{ user.phone }}</p>
+                        {% endif %}
+                        
+                        {% if profile %}
+                        {% if profile.gender %}
+                        <p class="text-secondary"><strong>Gender:</strong> {{ profile.gender }}</p>
+                        {% endif %}
+                        
+                        {% if profile.country %}
+                        <p class="text-secondary"><strong>Country:</strong> {{ profile.country }}</p>
+                        {% endif %}
+                        {% endif %}
+                        
+                        <button class="btn btn-primary w-100 mt-3">
+                            <i class="bi bi-pencil"></i> Edit Profile
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Stats -->
+            <div class="col-lg-8">
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="card bg-primary text-white h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-calendar-check" style="font-size: 2rem; display: block; margin-bottom: 0.5rem;"></i>
+                                <h6 class="card-title">Total Bookings</h6>
+                                <h2>0</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-success text-white h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-credit-card" style="font-size: 2rem; display: block; margin-bottom: 0.5rem;"></i>
+                                <h6 class="card-title">Amount Spent</h6>
+                                <h2>$0</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bookings Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-list-check"></i> Recent Bookings
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Booking ID</th>
+                                        <th>Hotel</th>
+                                        <th>Check-in</th>
+                                        <th>Check-out</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-4">
+                                            <i class="bi bi-inbox" style="font-size: 2rem; display: block; margin-bottom: 0.5rem;"></i>
+                                            No bookings yet
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Account Settings -->
+        <div class="row g-4 mt-4">
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-shield-lock"></i> Security
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <p class="text-muted small">Last changed: Not set</p>
+                            <button class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-key"></i> Change Password
+                            </button>
+                        </div>
+                        <hr>
+                        <div class="mb-0">
+                            <label class="form-label">Two-Factor Authentication</label>
+                            <p class="text-muted small">Add an extra layer of security to your account</p>
+                            <button class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-shield-check"></i> Enable 2FA
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-bell"></i> Notifications
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="emailNotif" checked>
+                            <label class="form-check-label" for="emailNotif">
+                                Email Notifications
+                            </label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="smsNotif" checked>
+                            <label class="form-check-label" for="smsNotif">
+                                SMS Notifications
+                            </label>
+                        </div>
+                        <div class="form-check mb-0">
+                            <input class="form-check-input" type="checkbox" id="promotions" checked>
+                            <label class="form-check-label" for="promotions">
+                                Promotional Offers
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

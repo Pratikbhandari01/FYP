@@ -1,0 +1,62 @@
+{% extends 'hotel/base.html' %}
+
+{% block title %}{{ hotel.name }} | Hotel Details{% endblock %}
+
+{% block content %}
+<section class="hero hero-bg"{% if hotel.image %} style="background-image: url('{{ hotel.image.url }}');"{% endif %}>
+    <div class="container py-5 text-white">
+        <div class="row">
+            <div class="col-lg-8">
+                <h1 class="display-5">{{ hotel.name }}</h1>
+                <p class="lead">{{ hotel.description|default:'No description available yet.' }}</p>
+                <p><i class="bi bi-geo-alt"></i> {{ hotel.location }}</p>
+                <p><i class="bi bi-telephone"></i> {{ hotel.mobile }}</p>
+                <p><i class="bi bi-envelope"></i> {{ hotel.email }}</p>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-4 mt-lg-0">
+                <a href="{% url 'hotel:rooms' %}" class="btn btn-outline-light">
+                    <i class="bi bi-door-closed"></i> Browse All Rooms
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container my-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="h4">Available Rooms at {{ hotel.name }}</h2>
+            <p class="text-muted">Showing all available rooms for this hotel.</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        {% for room in rooms %}
+        <div class="col-md-6 col-xl-4">
+            <div class="card h-100 shadow-sm">
+                {% if room.room_type.image or hotel.image %}
+                <img
+                    src="{% if room.room_type.image %}{{ room.room_type.image.url }}{% else %}{{ hotel.image.url }}{% endif %}"
+                    class="card-img-top"
+                    alt="{{ room.room_type.name }}"
+                    style="height:220px; object-fit:cover;"
+                >
+                {% endif %}
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title mb-2">Room {{ room.room_number }}</h5>
+                    <p class="mb-1"><strong>Type:</strong> {{ room.room_type.name }}</p>
+                    <p class="mb-1"><strong>Price:</strong> ${{ room.price }}</p>
+                    <p class="mb-2"><strong>Beds:</strong> {{ room.room_type.no_of_beds }}</p>
+                    <span class="badge bg-success mb-3">Available</span>
+                    <a href="{% url 'hotel:book_room' room.id %}" class="btn btn-primary mt-auto"><i class="bi bi-calendar-check"></i> Book Now</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-warning">No available rooms found for this hotel.</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

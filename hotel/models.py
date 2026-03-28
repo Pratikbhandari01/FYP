@@ -106,12 +106,16 @@ class Room(models.Model):
     rid = ShortUUIDField(length=8, unique=True, blank=True)
 
     def __str__(self):
-        return f"{self.room_number} - {self.room_type.name} - {self.room_type.hotel.name}"
+        return f"{self.room_number} - {self.room_type.name} - {self.hotel.name}"
     
     class Meta:
         verbose_name_plural = "Rooms"
 
     def save(self, *args, **kwargs):
+        # Keep hotel aligned with selected room type so admin filters and searches stay consistent.
+        if self.room_type_id and (not self.hotel_id or self.hotel_id != self.room_type.hotel_id):
+            self.hotel = self.room_type.hotel
+
         if self.room_type_id and (self.price is None or self.price == Decimal('0.00')):
             self.price = self.room_type.price
 
@@ -154,6 +158,15 @@ class Booking(models.Model):
     class Meta:
         verbose_name_plural = "Bookings"
 
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    address = models.TextField(blank=True, null=True)
+    profile_image = models.ImageField(upload_to='profiles/', blank=True, null=True)
+
+    def __str__(self):
+        return self.user.username
 
 
 

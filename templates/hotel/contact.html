@@ -1,58 +1,173 @@
-{% extends 'hotel/base.html' %}
+{% extends "hotel/base.html" %}
+{% load static %}
 
-{% block title %}Contact | Hotel Booking{% endblock %}
+{% block title %}Contact Us | Nepstay{% endblock %}
 
 {% block content %}
-<section class="hero mb-4">
-    <h1 class="h3 mb-2">Contact Us</h1>
-    <p class="mb-0 text-secondary">Have a question? Send us a message and we will reply quickly.</p>
+
+<!-- Hero Section -->
+<section class="hero hero-bg" style="background-image: url('/media/images/image.png'); min-height: 60vh;">
+    <div class="hero-content text-center">
+        <h1>Get In Touch</h1>
+        <p>We'd love to hear from you. Send us a message</p>
+    </div>
 </section>
 
-<div class="row g-4">
-    <div class="col-lg-7">
-        <div class="card shadow-sm p-4 h-100">
-            <h2 class="h5 mb-3">Send a Message</h2>
-            <form method="post" novalidate>
-                {% csrf_token %}
-                {{ form.non_field_errors }}
-
-                <div class="mb-3">
-                    {{ form.name.label_tag }}
-                    {{ form.name }}
-                    {{ form.name.errors }}
+<!-- Contact Section -->
+<section class="section">
+    <div class="container">
+        <div class="row g-5">
+            <!-- Contact Info -->
+            <div class="col-lg-4">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div style="font-size: 2.5rem; color: var(--primary); margin-bottom: 1rem;">
+                            <i class="bi bi-geo-alt"></i>
+                        </div>
+                        <h5 style="font-weight: 700; margin-bottom: 0.5rem;">Office Address</h5>
+                        <p class="text-muted">Prativa tol<br>Pokhara, Nepal 44600</p>
+                    </div>
                 </div>
 
-                <div class="mb-3">
-                    {{ form.email.label_tag }}
-                    {{ form.email }}
-                    {{ form.email.errors }}
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div style="font-size: 2.5rem; color: var(--primary); margin-bottom: 1rem;">
+                            <i class="bi bi-telephone"></i>
+                        </div>
+                        <h5 style="font-weight: 700; margin-bottom: 0.5rem;">Phone</h5>
+                        <p class="text-muted">+977 9861466369<br>Support: +977 9861466369</p>
+                    </div>
                 </div>
 
-                <div class="mb-3">
-                    {{ form.subject.label_tag }}
-                    {{ form.subject }}
-                    {{ form.subject.errors }}
+                <div class="card">
+                    <div class="card-body">
+                        <div style="font-size: 2.5rem; color: var(--primary); margin-bottom: 1rem;">
+                            <i class="bi bi-envelope"></i>
+                        </div>
+                        <h5 style="font-weight: 700; margin-bottom: 0.5rem;">Email</h5>
+                        <p class="text-muted">nepstay@gmail.com<br>nepstay@gmail.com</p>
+                    </div>
                 </div>
+            </div>
 
-                <div class="mb-3">
-                    {{ form.message.label_tag }}
-                    {{ form.message }}
-                    {{ form.message.errors }}
+            <!-- Contact Form -->
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-pencil-square"></i> Send us a Message
+                    </div>
+                    <div class="card-body">
+                        {% if messages %}
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            {% for message in messages %}
+                            {{ message }}
+                            {% endfor %}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endif %}
+
+                        <form method="POST">
+                            {% csrf_token %}
+                            
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">{{ form.name.label }}</label>
+                                        {{ form.name }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">{{ form.email.label }}</label>
+                                        {{ form.email }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">{{ form.subject.label }}</label>
+                                {{ form.subject }}
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">{{ form.message.label }}</label>
+                                {{ form.message }}
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-send"></i> Send Message
+                            </button>
+                        </form>
+                    </div>
                 </div>
-
-                <button class="btn btn-primary" type="submit">Send Message</button>
-            </form>
+            </div>
         </div>
     </div>
+</section>
 
-    <div class="col-lg-5">
-        <div class="card shadow-sm p-4 h-100">
-            <h2 class="h5 mb-3">Office Details</h2>
-            <p class="text-secondary mb-3">Reach us anytime for booking support and account help.</p>
-            <p class="mb-1"><strong>Email:</strong> support@hotelbooking.example</p>
-            <p class="mb-1"><strong>Phone:</strong> +1 (555) 123-4567</p>
-            <p class="mb-0"><strong>Address:</strong> 123 Main St, Suite 100, Anytown, USA</p>
+<!-- FAQ Section -->
+<section class="section bg-light">
+    <div class="container">
+        <h2 class="section-title">Frequently Asked Questions</h2>
+        
+        <div class="row g-4 mt-5">
+            <div class="col-lg-8 mx-auto">
+                <div class="accordion" id="faqAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                How do I book a hotel?
+                            </button>
+                        </h2>
+                        <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Simply browse our hotels, select your desired dates, choose a room, and complete the booking process. You'll receive a confirmation email immediately.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                Can I modify or cancel my booking?
+                            </button>
+                        </h2>
+                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Yes, you can modify or cancel your booking through your account. Cancellation policies vary by hotel, so please check your booking details.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                What payment methods do you accept?
+                            </button>
+                        </h2>
+                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                We accept all major credit cards, debit cards, and online payment methods. Your payment is secure and encrypted.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                                How can I contact customer support?
+                            </button>
+                        </h2>
+                        <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                You can reach our support team 24/7 via email (support@nepstay.com) or phone. We're always ready to help!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-</div>
+</section>
+
 {% endblock %}

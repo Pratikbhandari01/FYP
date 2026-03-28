@@ -15,6 +15,15 @@ from hotel.forms import ContactForm, HotelSearchForm
 # Create your views here.
 
 
+@login_required
+def profile_view(request):
+    profile = request.user.profile
+    return render(request, 'hotel/profile.html', {
+        'user': request.user,
+        'profile': profile
+    })
+
+
 class HotelListView(ListView):
     model = Hotel
     template_name = 'hotel/hotel_list.html'
@@ -77,6 +86,15 @@ def rooms_by_hotel_ajax(request, hotel_id):
         for room in rooms_qs
     ]
     return JsonResponse({'rooms': data})
+
+
+def hotel_detail(request, hotel_id):
+    hotel = get_object_or_404(Hotel, id=hotel_id)
+    rooms_qs = Room.objects.select_related('room_type').filter(hotel=hotel, availability=True).order_by('room_number')
+    return render(request, 'hotel/hotel_detail.html', {
+        'hotel': hotel,
+        'rooms': rooms_qs,
+    })
 
 
 @login_required(login_url='userauths:login')
@@ -157,3 +175,20 @@ def contact(request):
         form = ContactForm()
 
     return render(request, 'hotel/contact.html', {'form': form})
+
+
+def room_types_api(request):
+    """API endpoint to get room types filtered by hotel."""
+    hotel_id = request.GET.get('hotel_id')
+    
+    if not hotel_id:
+        return JsonResponse({'error': 'hotel_id is required'}, status=400)
+    
+    try:
+        hotel_id = int(hotel_id)
+    except (ValueError, TypeError):
+        return JsonResponse({'error': 'Invalid hotel_id'}, status=400)
+    
+    room_types = RoomType.objects.filter(hotel_id=hotel_id).values('id', 'name', 'price', 'hotel_id').order_by('name')
+    
+    return JsonResponse(list(room_types), safe=False)
