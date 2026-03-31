@@ -66,10 +66,10 @@ class RoomInline(admin.TabularInline):
 
     def get_formset(self, request, obj=None, **kwargs):
         formset = super().get_formset(request, obj, **kwargs)
-        # If this is a specific hotel, filter room_types for that hotel
+        # If this is a specific hotel, filter room_type options on the inline form class
         if obj:
-            for form in formset.forms:
-                form.fields['room_type'].queryset = RoomType.objects.filter(hotel=obj)
+            room_type_qs = RoomType.objects.filter(hotel=obj)
+            formset.form.base_fields['room_type'].queryset = room_type_qs
         return formset
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):

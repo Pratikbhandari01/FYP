@@ -8,6 +8,7 @@ from django.db.models.signals import post_save
 GENDER_CHOICES = (
     ("Female", "Female"),
     ("Male", "Male"),
+    ("Others", "Others"),
 )
 
 IDENTITY_TYPE = (
@@ -64,15 +65,7 @@ class Profile(models.Model):
             return self.user.username
             
 @receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        Profile.objects.create(user=instance)
-
-@receiver(post_save, sender=User)
-def save_user_profile(sender, instance, **kwargs):
-    instance.profile.save()
-
-@receiver(post_save, sender=User)
-def ensure_profile_exists(sender, instance, created, **kwargs):
-    # Always ensure profile exists (safe for old users too)
-    Profile.objects.get_or_create(user=instance)
+def create_or_update_user_profile(sender, instance, created, **kwargs):
+    profile, profile_created = Profile.objects.get_or_create(user=instance)
+    if not profile_created:
+        profile.save()
