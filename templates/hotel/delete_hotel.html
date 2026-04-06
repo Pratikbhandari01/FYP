@@ -1,0 +1,26 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/agent_portal.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="container agent-shell">
+    <div class="agent-hero">
+        <h2>Delete Hotel</h2>
+        <p class="mb-0 mt-1">This action cannot be undone.</p>
+    </div>
+
+    <div class="card agent-panel">
+        <div class="card-body">
+            <p class="mb-3">Are you sure you want to delete <strong>{{ object.name }}</strong>?</p>
+            <form method="post" class="d-flex gap-2 flex-wrap">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Confirm Delete</button>
+                <a href="{% url 'hotel:agent_hotel_list' %}" class="btn btn-outline-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}

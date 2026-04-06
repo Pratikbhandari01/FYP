@@ -7,13 +7,15 @@ from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.generic import ListView
-
-from hotel.models import RoomType, Hotel, Booking, Room
-from hotel.forms import ContactForm, HotelSearchForm
-
-
-# Create your views here.
-
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import CreateView, UpdateView, DeleteView
+from django.urls import reverse_lazy
+from .models import RoomType, Hotel, Booking, Room, ContactMessage
+from .forms import ContactForm, HotelSearchForm, HotelForm, RoomForm, RoomTypeForm
+from userauths.decorators import agent_required
+from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required
+from userauths.decorators import customer_required
 
 @login_required
 def profile_view(request):
@@ -168,7 +170,13 @@ def contact(request):
     if request.method == "POST":
         form = ContactForm(request.POST)
         if form.is_valid():
-            # In a real project, you'd send an email or save the message.
+            ContactMessage.objects.create(
+                user=request.user if request.user.is_authenticated else None,
+                name=form.cleaned_data['name'],
+                email=form.cleaned_data['email'],
+                subject=form.cleaned_data['subject'],
+                message=form.cleaned_data['message'],
+            )
             messages.success(request, "Thanks for reaching out! We'll get back to you soon.")
             return redirect('hotel:contact')
     else:
@@ -192,3 +200,140 @@ def room_types_api(request):
     room_types = RoomType.objects.filter(hotel_id=hotel_id).values('id', 'name', 'price', 'hotel_id').order_by('name')
     
     return JsonResponse(list(room_types), safe=False)
+
+@method_decorator(login_required, name='dispatch')
+@method_decorator(agent_required, name='dispatch')
+class AgentHotelListView(ListView):
+    model = Hotel
+    template_name = 'hotel/agent_hotel_list.html'
+    context_object_name = 'hotels'
+
+    def get_queryset(self):
+        return Hotel.objects.filter(agent=self.request.user)
+
+@method_decorator(login_required, name='dispatch')
+@method_decorator(agent_required, name='dispatch')
+class CreateHotelView(CreateView):
+    model = Hotel
+    form_class = HotelForm
+    template_name = 'hotel/create_hotel.html'
+    success_url = reverse_lazy('hotel:agent_hotel_list')
+
+    def form_valid(self, form):
+        form.instance.agent = self.request.user
+        return super().form_valid(form)
+
+@method_decorator(login_required, name='dispatch')
+@method_decorator(agent_required, name='dispatch')
+class UpdateHotelView(UpdateView):
+    model = Hotel
+    form_class = HotelForm
+    template_name = 'hotel/update_hotel.html'
+    success_url = reverse_lazy('hotel:agent_hotel_list')
+
+    def get_queryset(self):
+        return Hotel.objects.filter(agent=self.request.user)
+
+@method_decorator(login_required, name='dispatch')
+@method_decorator(agent_required, name='dispatch')
+class DeleteHotelView(DeleteView):
+    model = Hotel
+    template_name = 'hotel/delete_hotel.html'
+    success_url = reverse_lazy('hotel:agent_hotel_list')
+
+    def get_queryset(self):
+        return Hotel.objects.filter(agent=self.request.user)
+
+@login_required
+@customer_required
+def customer_bookings(request):
+    bookings = Booking.objects.filter(customer=request.user)
+    return render(request, 'hotel/customer_bookings.html', {'bookings': bookings})
+
+
+@login_required
+@agent_required
+def add_room(request, hotel_id):
+    hotel = get_object_or_404(Hotel, id=hotel_id, agent=request.user)
+    room_type_queryset = RoomType.objects.filter(hotel=hotel)
+
+    if request.method == 'POST':
+        form = RoomForm(request.POST)
+        form.fields['room_type'].queryset = room_type_queryset
+        if form.is_valid():
+            room = form.save(commit=False)
+            room.hotel = hotel
+            room.save()
+            messages.success(request, f"Room {room.room_number} has been added to {hotel.name}.")
+            return redirect('hotel:agent_hotel_list')
+    else:
+        form = RoomForm()
+        form.fields['room_type'].queryset = room_type_queryset
+
+    context = {
+        'form': form,
+        'hotel': hotel,
+        'room_type_count': room_type_queryset.count(),
+    }
+    return render(request, 'hotel/add_room.html', context)
+
+
+@login_required
+@agent_required
+def room_type_list(request, hotel_id):
+    hotel = get_object_or_404(Hotel, id=hotel_id, agent=request.user)
+    room_types = RoomType.objects.filter(hotel=hotel).order_by('name')
+    return render(request, 'hotel/room_type_list.html', {'hotel': hotel, 'room_types': room_types})
+
+
+@login_required
+@agent_required
+def add_room_type(request, hotel_id):
+    hotel = get_object_or_404(Hotel, id=hotel_id, agent=request.user)
+
+    if request.method == 'POST':
+        form = RoomTypeForm(request.POST, request.FILES)
+        if form.is_valid():
+            room_type = form.save(commit=False)
+            room_type.hotel = hotel
+            room_type.save()
+            messages.success(request, f"Room type '{room_type.name}' added for {hotel.name}.")
+            return redirect('hotel:room_type_list', hotel_id=hotel.id)
+    else:
+        form = RoomTypeForm()
+
+    return render(request, 'hotel/create_room_type.html', {'form': form, 'hotel': hotel})
+
+
+@login_required
+@agent_required
+def update_room_type(request, hotel_id, room_type_id):
+    hotel = get_object_or_404(Hotel, id=hotel_id, agent=request.user)
+    room_type = get_object_or_404(RoomType, id=room_type_id, hotel=hotel)
+
+    if request.method == 'POST':
+        form = RoomTypeForm(request.POST, request.FILES, instance=room_type)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Room type '{room_type.name}' updated.")
+            return redirect('hotel:room_type_list', hotel_id=hotel.id)
+    else:
+        form = RoomTypeForm(instance=room_type)
+
+    context = {'form': form, 'hotel': hotel, 'room_type': room_type}
+    return render(request, 'hotel/update_room_type.html', context)
+
+
+@login_required
+@agent_required
+def delete_room_type(request, hotel_id, room_type_id):
+    hotel = get_object_or_404(Hotel, id=hotel_id, agent=request.user)
+    room_type = get_object_or_404(RoomType, id=room_type_id, hotel=hotel)
+
+    if request.method == 'POST':
+        deleted_name = room_type.name
+        room_type.delete()
+        messages.success(request, f"Room type '{deleted_name}' deleted.")
+        return redirect('hotel:room_type_list', hotel_id=hotel.id)
+
+    return render(request, 'hotel/delete_room_type.html', {'hotel': hotel, 'room_type': room_type})

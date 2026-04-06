@@ -1,6 +1,6 @@
 from django import forms
 
-from hotel.models import Hotel
+from hotel.models import Hotel, Room, RoomType
 
 
 class ContactForm(forms.Form):
@@ -41,11 +41,39 @@ class ContactForm(forms.Form):
 class HotelForm(forms.ModelForm):
     class Meta:
         model = Hotel
-        fields = ["name", "location", "description", "image"]
+        fields = ["name", "description", "image", "address", "mobile", "email", "status"]
         widgets = {
             "name": forms.TextInput(attrs={"class": "form-control", "placeholder": "Hotel name"}),
-            "location": forms.TextInput(attrs={"class": "form-control", "placeholder": "City or area"}),
             "description": forms.Textarea(attrs={"class": "form-control", "rows": 4, "placeholder": "Hotel description"}),
+            "image": forms.ClearableFileInput(attrs={"class": "form-control"}),
+            "address": forms.TextInput(attrs={"class": "form-control", "placeholder": "Hotel address"}),
+            "mobile": forms.TextInput(attrs={"class": "form-control", "placeholder": "Hotel mobile"}),
+            "email": forms.EmailInput(attrs={"class": "form-control", "placeholder": "Hotel email"}),
+            "status": forms.Select(attrs={"class": "form-control"}),
+        }
+
+
+class RoomForm(forms.ModelForm):
+    class Meta:
+        model = Room
+        fields = ['room_type', 'room_number', 'price', 'availability']
+        widgets = {
+            'room_type': forms.Select(attrs={'class': 'form-control'}),
+            'room_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., 101'}),
+            'price': forms.NumberInput(attrs={'class': 'form-control'}),
+            'availability': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+
+class RoomTypeForm(forms.ModelForm):
+    class Meta:
+        model = RoomType
+        fields = ["name", "description", "price", "no_of_beds", "image"]
+        widgets = {
+            "name": forms.TextInput(attrs={"class": "form-control", "placeholder": "e.g., Deluxe Room"}),
+            "description": forms.Textarea(attrs={"class": "form-control", "rows": 4, "placeholder": "Describe this room type"}),
+            "price": forms.NumberInput(attrs={"class": "form-control", "placeholder": "e.g., 3000"}),
+            "no_of_beds": forms.NumberInput(attrs={"class": "form-control", "min": "1"}),
             "image": forms.ClearableFileInput(attrs={"class": "form-control"}),
         }
 

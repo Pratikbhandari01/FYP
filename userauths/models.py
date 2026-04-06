@@ -24,12 +24,17 @@ def user_directory_path(instance, filename):
     return "user_{0}/{1}".format(instance.user.id, filename)
 
 class User(AbstractUser):
+    ROLE_CHOICES = (
+        ("customer", "Customer"),
+        ("agent", "Agent"),
+    )
     full_name = models.CharField(max_length=255, blank=True, null=True )
     username = models.CharField(max_length=150, unique=True)
     email = models.EmailField(unique=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default="Others")
     otp = models.CharField(max_length=10, blank=True, null=True)
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default="customer")
 
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS = ["email"]   # ✅ username हटायो

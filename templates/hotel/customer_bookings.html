@@ -1,0 +1,24 @@
+{% extends "partials/base.html" %}
+{% block content %}
+<main class="mb-4">
+    <div class="container">
+        <h1>My Bookings</h1>
+        <div class="row">
+            {% for booking in bookings %}
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ booking.hotel.name }}</h5>
+                        <p class="card-text">Room: {{ booking.room.room_number }}</p>
+                        <p class="card-text">Check-in: {{ booking.check_in }}</p>
+                        <p class="card-text">Check-out: {{ booking.check_out }}</p>
+                        <p class="card-text">Total: NPR {{ booking.total_price }}</p>
+                        <p class="card-text">Status: {{ booking.payment_status }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</main>
+{% endblock %}

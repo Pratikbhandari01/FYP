@@ -1,0 +1,40 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/agent_portal.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="container agent-shell">
+    <div class="agent-hero d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h2>Add Room</h2>
+            <p class="mb-0 mt-1">Hotel: {{ hotel.name }}</p>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="{% url 'hotel:room_type_list' hotel.id %}" class="btn btn-warning fw-semibold">Manage Room Types</a>
+            <a href="{% url 'hotel:agent_hotel_list' %}" class="btn btn-light fw-semibold">Back to Hotel List</a>
+        </div>
+    </div>
+
+    <div class="card agent-panel">
+        <div class="card-body agent-form">
+            {% if room_type_count == 0 %}
+            <div class="alert alert-warning">
+                You need at least one room type before adding rooms.
+                <a href="{% url 'hotel:add_room_type' hotel.id %}" class="alert-link">Add Room Type now</a>.
+            </div>
+            {% endif %}
+            <form method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <div class="d-flex gap-2 pt-2 flex-wrap">
+                    <button type="submit" class="btn btn-primary">Add Room</button>
+                    <a href="{% url 'hotel:agent_hotel_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -46,7 +46,7 @@ INSTALLED_APPS = [
 
     # Custom apps
     'hotel',
-    'user_dashboard',
+    'user_dashboard.apps.UserDashboardConfig',
     'addon',
 
     # Third-party apps
@@ -202,3 +202,8 @@ JAZZMIN_UI_TWEAKS = {
     "brand_colour": "navbar-info",
     "accent": "accent-info",
 }
+
+LOGIN_URL = 'userauths:login'
+LOGOUT_URL = 'userauths:logout'
+LOGIN_REDIRECT_URL = 'hotel:index'
+LOGOUT_REDIRECT_URL = 'hotel:index'

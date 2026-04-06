@@ -1,0 +1,47 @@
+<footer class="bg-light text-center text-lg-start mt-auto">
+    <div class="container p-4">
+        <div class="row">
+            <div class="col-lg-6 col-md-12 mb-4 mb-md-0">
+                <h5 class="text-uppercase">NepStay</h5>
+                <p>
+                    Your one-stop solution for finding and booking the perfect hotel for your next getaway.
+                </p>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4 mb-md-0">
+                <h5 class="text-uppercase">Links</h5>
+                <ul class="list-unstyled mb-0">
+                    <li>
+                        <a href="{% url 'hotel:index' %}" class="text-dark">Home</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'hotel:hotel_list' %}" class="text-dark">Hotels</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'hotel:about' %}" class="text-dark">About</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'hotel:contact' %}" class="text-dark">Contact</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4 mb-md-0">
+                <h5 class="text-uppercase">Contact</h5>
+                <ul class="list-unstyled">
+                    <li>
+                        <p><i class="fas fa-home me-3"></i> Kathmandu, Nepal</p>
+                    </li>
+                    <li>
+                        <p><i class="fas fa-envelope me-3"></i> info@nepstay.com</p>
+                    </li>
+                    <li>
+                        <p><i class="fas fa-phone me-3"></i> + 977 980 000 0000</p>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="text-center p-3" style="background-color: rgba(0, 0, 0, 0.2);">
+        © 2024 Copyright:
+        <a class="text-dark" href="{% url 'hotel:index' %}">NepStay.com</a>
+    </div>
+</footer>

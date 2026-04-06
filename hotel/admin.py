@@ -2,7 +2,7 @@ from django.contrib import admin
 from django import forms
 from django.urls import reverse
 from django.utils.html import format_html
-from .models import Booking, Hotel, RoomType, Room
+from .models import Booking, ContactMessage, Hotel, RoomType, Room
 
 
 
@@ -161,15 +161,15 @@ class RoomAdmin(admin.ModelAdmin):
 
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
-    list_display = ['booking_id', 'user', 'hotel', 'room', 'check_in', 'check_out', 'total_price', 'payment_status', 'is_active', 'manage_actions']
+    list_display = ['booking_id', 'customer', 'hotel', 'room', 'check_in', 'check_out', 'total_price', 'payment_status', 'is_active', 'manage_actions']
     list_filter = ['payment_status', 'is_active', 'check_in', 'check_out']
-    search_fields = ['booking_id', 'user__username', 'hotel__name', 'room__room_number']
+    search_fields = ['booking_id', 'customer__username', 'hotel__name', 'room__room_number']
     readonly_fields = ['booking_id', 'date']
     list_per_page = 25
     ordering = ['-date']
     fieldsets = (
         (None, {
-            'fields': ('user', 'full_name', 'email', 'Phone', 'hotel', 'room_type', 'room', 'check_in', 'check_out', 'total_price', 'total_days', 'payment_status', 'is_active', 'booking_id')
+            'fields': ('customer', 'full_name', 'email', 'Phone', 'hotel', 'room_type', 'room', 'check_in', 'check_out', 'total_price', 'total_days', 'payment_status', 'is_active', 'booking_id')
         }),
     )
     actions = ['mark_completed', 'mark_pending', 'mark_failed']
@@ -221,6 +221,16 @@ class RoomTypeAdmin(admin.ModelAdmin):
             delete_url,
         )
     manage_actions.short_description = 'Actions'
+
+
+@admin.register(ContactMessage)
+class ContactMessageAdmin(admin.ModelAdmin):
+    list_display = ['name', 'email', 'subject', 'is_read', 'created_at']
+    list_filter = ['is_read', 'created_at']
+    search_fields = ['name', 'email', 'subject', 'message']
+    readonly_fields = ['created_at']
+    ordering = ['-created_at']
+    list_editable = ['is_read']
 
 
 

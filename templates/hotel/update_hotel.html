@@ -1,0 +1,31 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/agent_portal.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="container agent-shell">
+    <div class="agent-hero d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h2>Update Hotel</h2>
+            <p class="mb-0 mt-1">Edit your hotel details and keep listings accurate.</p>
+        </div>
+        <a href="{% url 'hotel:agent_hotel_list' %}" class="btn btn-light fw-semibold">Back to Hotels</a>
+    </div>
+
+    <div class="card agent-panel">
+        <div class="card-body agent-form">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <div class="d-flex gap-2 pt-2 flex-wrap">
+                    <button type="submit" class="btn btn-primary">Update Hotel</button>
+                    <a href="{% url 'hotel:agent_hotel_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}

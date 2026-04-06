@@ -247,7 +247,7 @@
 
                     <div class="mt-auto room-card-footer">
                         <div>
-                            <span class="room-price">${{ room.price }}</span>
+                            <span class="room-price">NPR {{ room.price }}</span>
                         </div>
                         <a href="{% url 'hotel:book_room' room.id %}" class="btn btn-primary">Book Now</a>
                     </div>
@@ -292,7 +292,7 @@
                         <h3 class="room-card-title">Room ${room.room_number}</h3>
                         <p class="room-card-subtitle">${room.room_type}</p>
                         <div class="mt-auto room-card-footer">
-                            <div><span class="room-price">$${room.price}</span></div>
+                            <div><span class="room-price">NPR ${room.price}</span></div>
                             <a href="/rooms/book/${room.id}/" class="btn btn-primary">Book Now</a>
                         </div>
                     </div>

@@ -65,6 +65,9 @@
                             <i class="bi bi-person-circle"></i> {{ request.user.username }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            {% if request.user.role == 'agent' %}
+                            <li><a class="dropdown-item" href="{% url 'userauths:agent_dashboard' %}">Dashboard</a></li>
+                            {% endif %}
                             <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#profileModal">Profile</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item text-danger" href="{% url 'userauths:logout' %}">Logout</a></li>

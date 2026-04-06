@@ -1,0 +1,53 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/agent_portal.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="container agent-shell">
+    <div class="agent-hero d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h2>Room Types</h2>
+            <p class="mb-0 mt-1">Hotel: {{ hotel.name }}</p>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="{% url 'hotel:add_room_type' hotel.id %}" class="btn btn-warning fw-semibold">Add Room Type</a>
+            <a href="{% url 'hotel:add_room' hotel.id %}" class="btn btn-light fw-semibold">Add Room</a>
+            <a href="{% url 'hotel:agent_hotel_list' %}" class="btn btn-outline-light fw-semibold">Back</a>
+        </div>
+    </div>
+
+    <div class="card agent-panel">
+        <div class="card-header">
+            <h5 class="mb-0">Available Room Types</h5>
+        </div>
+        <div class="card-body">
+            {% if room_types %}
+            <div class="list-group">
+                {% for room_type in room_types %}
+                <div class="list-group-item agent-list-item d-flex flex-column flex-lg-row justify-content-between align-items-lg-center">
+                    <div class="mb-2 mb-lg-0">
+                        <h5 class="mb-1">{{ room_type.name }}</h5>
+                        <p class="mb-1 text-secondary">{{ room_type.description|default:'No description' }}</p>
+                        <small class="text-muted">Price: NPR {{ room_type.price }} | Beds: {{ room_type.no_of_beds }}</small>
+                    </div>
+                    <div class="agent-actions">
+                        <a href="{% url 'hotel:update_room_type' hotel.id room_type.id %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                        <a href="{% url 'hotel:delete_room_type' hotel.id room_type.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <h5>No room types found</h5>
+                <p class="text-secondary mb-3">Create your first room type before adding rooms.</p>
+                <a href="{% url 'hotel:add_room_type' hotel.id %}" class="btn btn-primary">Create Room Type</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}
