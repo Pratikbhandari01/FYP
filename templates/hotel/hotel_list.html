@@ -3,132 +3,444 @@
 
 {% block title %}Browse Hotels | Nepstay{% endblock %}
 
+{% block extra_css %}
+<style>
+    .hotels-showcase {
+        position: relative;
+        overflow: hidden;
+        padding: 5.5rem 0 4.5rem;
+        background:
+            radial-gradient(circle at 10% 20%, rgba(10, 178, 164, 0.24), transparent 35%),
+            radial-gradient(circle at 85% 15%, rgba(255, 159, 67, 0.22), transparent 35%),
+            linear-gradient(180deg, #f8fbfd 0%, #eef6fb 48%, #f8fbfd 100%);
+    }
+
+    .hotels-showcase::before {
+        content: "";
+        position: absolute;
+        inset: -35% auto auto -20%;
+        width: 420px;
+        height: 420px;
+        border-radius: 50%;
+        background: rgba(9, 123, 113, 0.1);
+        filter: blur(8px);
+        animation: floatOrb 9s ease-in-out infinite;
+    }
+
+    .hotels-showcase::after {
+        content: "";
+        position: absolute;
+        inset: auto -12% -20% auto;
+        width: 320px;
+        height: 320px;
+        border-radius: 50%;
+        background: rgba(255, 159, 67, 0.16);
+        animation: floatOrb 11s ease-in-out infinite reverse;
+    }
+
+    .hotels-shell {
+        position: relative;
+        z-index: 2;
+    }
+
+    .hotels-hero {
+        border-radius: 1.6rem;
+        padding: 2.2rem;
+        background: linear-gradient(135deg, #0d3b66 0%, #146c7a 52%, #198b8b 100%);
+        color: #fff;
+        box-shadow: 0 28px 60px rgba(11, 56, 74, 0.25);
+        margin-bottom: 2rem;
+    }
+
+    .hotels-kicker {
+        font-size: 0.82rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        font-weight: 700;
+        opacity: 0.85;
+    }
+
+    .hotels-title {
+        font-family: 'Sora', sans-serif;
+        font-weight: 700;
+        font-size: clamp(2rem, 4.4vw, 3rem);
+        margin: 0.5rem 0 0.85rem;
+    }
+
+    .hotels-subtitle {
+        max-width: 50ch;
+        margin: 0;
+        opacity: 0.92;
+    }
+
+    .hero-stat-group {
+        display: flex;
+        gap: 0.8rem;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        margin-top: 1.2rem;
+    }
+
+    .hero-stat {
+        background: rgba(255, 255, 255, 0.16);
+        border: 1px solid rgba(255, 255, 255, 0.24);
+        border-radius: 0.9rem;
+        padding: 0.65rem 0.9rem;
+        font-size: 0.92rem;
+        backdrop-filter: blur(6px);
+    }
+
+    .filter-panel {
+        position: sticky;
+        top: 1.25rem;
+        border-radius: 1.2rem;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        box-shadow: 0 22px 45px rgba(15, 23, 42, 0.08);
+        backdrop-filter: blur(10px);
+        padding: 1.2rem;
+    }
+
+    .filter-title {
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        color: #0f172a;
+    }
+
+    .filter-subtitle {
+        color: #64748b;
+        font-size: 0.9rem;
+        margin: 0.3rem 0 1rem;
+    }
+
+    .filter-control {
+        border-radius: 0.85rem;
+        border: 1px solid #cbd5e1;
+        padding: 0.8rem 0.95rem;
+    }
+
+    .filter-control:focus {
+        border-color: #198b8b;
+        box-shadow: 0 0 0 0.2rem rgba(25, 139, 139, 0.2);
+    }
+
+    .btn-explore {
+        background: linear-gradient(135deg, #0b786f 0%, #15938f 100%);
+        border: none;
+        border-radius: 0.85rem;
+        color: #fff;
+        font-weight: 600;
+        padding: 0.8rem 1rem;
+    }
+
+    .btn-explore:hover {
+        color: #fff;
+        filter: brightness(1.06);
+    }
+
+    .hotels-grid {
+        row-gap: 1.25rem;
+    }
+
+    .hotel-card {
+        height: 100%;
+        border-radius: 1.25rem;
+        overflow: hidden;
+        border: 1px solid rgba(15, 23, 42, 0.1);
+        background: #fff;
+        box-shadow: 0 20px 42px rgba(15, 23, 42, 0.08);
+        transition: transform .26s ease, box-shadow .26s ease, border-color .26s ease;
+        animation: revealUp .55s ease forwards;
+        animation-delay: calc(var(--stagger, 0) * 90ms);
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    .hotel-card:hover {
+        transform: translateY(-6px);
+        border-color: rgba(21, 147, 143, 0.45);
+        box-shadow: 0 28px 54px rgba(15, 23, 42, 0.14);
+    }
+
+    .hotel-thumb-wrap {
+        position: relative;
+        height: 210px;
+        overflow: hidden;
+    }
+
+    .hotel-thumb {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform .5s ease;
+    }
+
+    .hotel-card:hover .hotel-thumb {
+        transform: scale(1.06);
+    }
+
+    .hotel-badge {
+        position: absolute;
+        top: 0.75rem;
+        left: 0.75rem;
+        background: rgba(15, 23, 42, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        color: #fff;
+        border-radius: 999px;
+        font-size: 0.74rem;
+        font-weight: 600;
+        padding: 0.3rem 0.65rem;
+    }
+
+    .hotel-card-content {
+        padding: 1rem 1rem 1.1rem;
+    }
+
+    .hotel-name {
+        font-family: 'Sora', sans-serif;
+        font-weight: 600;
+        margin-bottom: 0.45rem;
+    }
+
+    .hotel-meta {
+        font-size: 0.89rem;
+        color: #475569;
+        margin-bottom: 0.45rem;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .hotel-desc {
+        color: #64748b;
+        font-size: 0.88rem;
+        min-height: 2.85rem;
+        margin-bottom: 0.8rem;
+    }
+
+    .hotel-cta {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        border-radius: 0.75rem;
+        background: #effcf9;
+        color: #0b786f;
+        border: 1px solid #b9ece6;
+        font-weight: 600;
+        padding: 0.65rem 0.8rem;
+    }
+
+    .hotel-cta:hover {
+        background: #dff8f3;
+        color: #075f59;
+    }
+
+    .empty-state {
+        border-radius: 1.25rem;
+        border: 1px dashed #cbd5e1;
+        background: #ffffff;
+        padding: 2.6rem 1.2rem;
+        text-align: center;
+    }
+
+    .pagination .page-link {
+        border-radius: 0.7rem;
+        margin: 0 0.2rem;
+        border-color: #dbe8ef;
+        color: #0b786f;
+    }
+
+    .pagination .page-item.active .page-link {
+        background-color: #0b786f;
+        border-color: #0b786f;
+    }
+
+    @keyframes floatOrb {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-16px); }
+    }
+
+    @keyframes revealUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @media (max-width: 991px) {
+        .hotels-showcase {
+            padding-top: 4.5rem;
+        }
+
+        .filter-panel {
+            position: static;
+            margin-bottom: 1rem;
+        }
+    }
+
+    @media (max-width: 767px) {
+        .hotels-hero {
+            padding: 1.4rem;
+        }
+
+        .hero-stat-group {
+            gap: 0.5rem;
+        }
+
+        .hero-stat {
+            font-size: 0.8rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-
-<section class="hero" style="background-image: url('/media/hotel_images/Screenshot_2026-03-21_095404.png'); background-size: cover; background-position: center; position: relative; pointer-events: auto;">
-    <div class="container" style="position: relative; z-index: 1; pointer-events: auto;">
-        <div class="row mb-5">
-            <div class="col-12 text-white text-center">
-                <h1 class="section-title">Discover Premium Hotels</h1>
-                <p class="section-subtitle">Browse our curated selection of accommodations</p>
-            </div>
-        </div>
-
-        <div class="row g-4">
-            <!-- Filters Sidebar -->
-            <div class="col-lg-3">
-                <div class="card" style="position: relative; z-index: 1; pointer-events: auto;">
-                    <div class="card-header">
-                        <i class="bi bi-funnel"></i> Filters
-                    </div>
-                    <div class="card-body">
-                        <form method="GET" id="filterForm" style="pointer-events: auto;">
-                            <div class="mb-4">
-                                <label class="form-label">Search</label>
-                                <input 
-                                    type="text" 
-                                    name="q" 
-                                    class="form-control" 
-                                    value="{{ request.GET.q }}"
-                                    placeholder="Hotel name or location..."
-                                >
-                            </div>
-                            
-                            <button type="submit" class="btn btn-primary w-100" style="pointer-events: auto;">
-                                <i class="bi bi-search"></i> Search
-                            </button>
-                        </form>
+<section class="hotels-showcase">
+    <div class="container hotels-shell">
+        <div class="hotels-hero">
+            <div class="row align-items-end g-3">
+                <div class="col-lg-8">
+                    <p class="hotels-kicker mb-0">Handpicked stays</p>
+                    <h1 class="hotels-title">Find your next unforgettable hotel</h1>
+                    <p class="hotels-subtitle">Explore curated properties with trusted amenities, smooth booking, and rooms that match your travel style.</p>
+                </div>
+                <div class="col-lg-4">
+                    <div class="hero-stat-group">
+                        <div class="hero-stat">
+                            <i class="bi bi-buildings"></i>
+                            {% if is_paginated %}
+                                {{ page_obj.paginator.count }} hotels listed
+                            {% else %}
+                                {{ hotels|length }} hotels listed
+                            {% endif %}
+                        </div>
+                        <div class="hero-stat"><i class="bi bi-shield-check"></i> Verified partners</div>
+                        <div class="hero-stat"><i class="bi bi-lightning-charge"></i> Fast booking flow</div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Hotels Grid -->
+        <div class="row g-4 align-items-start">
+            <div class="col-lg-3">
+                <aside class="filter-panel">
+                    <h2 class="filter-title"><i class="bi bi-sliders2"></i> Refine Results</h2>
+                    <p class="filter-subtitle">Search by hotel name or location.</p>
+                    <form method="GET" id="filterForm">
+                        <div class="mb-3">
+                            <label class="form-label small text-secondary" for="hotel-query">Keyword</label>
+                            <input
+                                id="hotel-query"
+                                type="text"
+                                name="q"
+                                class="form-control filter-control"
+                                value="{{ request.GET.q }}"
+                                placeholder="e.g. Kathmandu, resort, city view"
+                            >
+                        </div>
+
+                        <button type="submit" class="btn btn-explore w-100">
+                            <i class="bi bi-search"></i> Explore Hotels
+                        </button>
+
+                        {% if request.GET.q %}
+                        <a href="{% url 'hotel:hotel_list' %}" class="btn btn-outline-secondary w-100 mt-2 rounded-3">
+                            <i class="bi bi-arrow-counterclockwise"></i> Reset
+                        </a>
+                        {% endif %}
+                    </form>
+                </aside>
+            </div>
+
             <div class="col-lg-9">
                 {% if hotels %}
-                <div class="row g-4">
+                <div class="row hotels-grid">
                     {% for hotel in hotels %}
-                    <div class="col-md-6 col-lg-4">
-                        <div class="room-card hotel-card-link" onclick="window.location.href='{% url 'hotel:rooms' %}?hotel={{ hotel.id }}'" style="cursor:pointer; position:relative; z-index:1;">                            {% if hotel.image %}
-                            <img src="{{ hotel.image.url }}" alt="{{ hotel.name }}" class="room-image">
-                            {% else %}
-                            <div class="room-image bg-secondary d-flex align-items-center justify-content-center">
-                                <i class="bi bi-image text-white" style="font-size: 3rem;"></i>
-                            </div>
-                            {% endif %}
-                            
-                            <div class="room-info">
-                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                    <h5 class="room-title">{{ hotel.name }}</h5>
+                    <div class="col-sm-6 col-xl-4 d-flex">
+                        <article class="hotel-card w-100" style="--stagger: {{ forloop.counter0 }};">
+                            <a href="{% url 'hotel:rooms' %}?hotel={{ hotel.id }}" class="text-decoration-none">
+                                <div class="hotel-thumb-wrap">
+                                    {% if hotel.image %}
+                                    <img src="{{ hotel.image.url }}" alt="{{ hotel.name }}" class="hotel-thumb">
+                                    {% else %}
+                                    <div class="hotel-thumb d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #c4f1ef 0%, #9be6d1 100%);">
+                                        <i class="bi bi-image fs-2 text-white"></i>
+                                    </div>
+                                    {% endif %}
+
                                     {% if hotel.featured %}
-                                    <span class="badge bg-warning">
-                                        <i class="bi bi-star-fill"></i> Featured
-                                    </span>
+                                    <span class="hotel-badge"><i class="bi bi-stars"></i> Featured</span>
                                     {% endif %}
                                 </div>
-                                
-                                <div class="d-flex align-items-center gap-2 mb-3">
-                                    <i class="bi bi-geo-alt text-primary"></i>
-                                    <span class="text-secondary small">{{ hotel.location }}</span>
-                                </div>
-                                
-                                <div class="d-flex align-items-center gap-2 mb-3 text-secondary small">
-                                    <i class="bi bi-telephone"></i>
-                                    {{ hotel.mobile }}
-                                </div>
-                                
-                                <p class="text-muted small flex-grow-1">
-                                    {{ hotel.description|truncatewords:15 }}
-                                </p>
-                                
-                                <div class="d-grid">
-                                    <a class="btn btn-primary text-center" href="{% url 'hotel:rooms' %}?hotel={{ hotel.id }}" style="pointer-events: auto;">
+
+                                <div class="hotel-card-content">
+                                    <h3 class="hotel-name h5 text-dark">{{ hotel.name }}</h3>
+                                    <p class="hotel-meta"><i class="bi bi-geo-alt"></i> {{ hotel.location }}</p>
+                                    <p class="hotel-meta"><i class="bi bi-telephone"></i> {{ hotel.mobile }}</p>
+                                    <p class="hotel-desc">{{ hotel.description|truncatewords:16 }}</p>
+
+                                    <span class="hotel-cta">
                                         <i class="bi bi-door-open"></i> View Available Rooms
-                                    </a>
+                                    </span>
                                 </div>
-                            </div>
-                        </div>
+                            </a>
+                        </article>
                     </div>
                     {% endfor %}
                 </div>
 
-                <!-- Pagination -->
                 {% if is_paginated %}
-                <nav class="mt-5">
-                    <ul class="pagination justify-content-center">
+                <nav class="mt-4" aria-label="Hotels pagination">
+                    <ul class="pagination justify-content-center flex-wrap">
                         {% if page_obj.has_previous %}
                         <li class="page-item">
-                            <a class="page-link" href="?page=1">First</a>
+                            <a class="page-link" href="?{% if request.GET.q %}q={{ request.GET.q|urlencode }}&{% endif %}page=1">First</a>
                         </li>
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                            <a class="page-link" href="?{% if request.GET.q %}q={{ request.GET.q|urlencode }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>
                         </li>
                         {% endif %}
 
-                        <li class="page-item active">
+                        <li class="page-item active" aria-current="page">
                             <span class="page-link">{{ page_obj.number }}</span>
                         </li>
 
                         {% if page_obj.has_next %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                            <a class="page-link" href="?{% if request.GET.q %}q={{ request.GET.q|urlencode }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a>
                         </li>
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                            <a class="page-link" href="?{% if request.GET.q %}q={{ request.GET.q|urlencode }}&{% endif %}page={{ page_obj.paginator.num_pages }}">Last</a>
                         </li>
                         {% endif %}
                     </ul>
                 </nav>
                 {% endif %}
                 {% else %}
-                <div class="text-center py-5">
-                    <i class="bi bi-inbox" style="font-size: 4rem; color: var(--text-tertiary);"></i>
-                    <h5 class="mt-3">No hotels found</h5>
-                    <p class="text-muted">Try adjusting your search criteria</p>
+                <div class="empty-state">
+                    <i class="bi bi-search fs-1 text-secondary"></i>
+                    <h3 class="h5 mt-3 mb-2">No hotels matched your search</h3>
+                    <p class="text-secondary mb-3">Try a broader keyword or clear the search to view all listed properties.</p>
+                    <a href="{% url 'hotel:hotel_list' %}" class="btn btn-outline-primary rounded-3 px-4">Show all hotels</a>
                 </div>
                 {% endif %}
             </div>
         </div>
     </div>
 </section>
+{% endblock %}
 
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const query = document.getElementById('hotel-query');
+        if (query) {
+            query.focus({ preventScroll: true });
+        }
+    });
+</script>
 {% endblock %}
