@@ -17,6 +17,24 @@ import os
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+def _load_env_file(env_path):
+    if not env_path.exists():
+        return
+
+    for raw_line in env_path.read_text(encoding='utf-8').splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith('#') or '=' not in line:
+            continue
+
+        key, value = line.split('=', 1)
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+        os.environ.setdefault(key, value)
+
+
+_load_env_file(BASE_DIR / '.env')
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
@@ -32,8 +50,6 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'jazzmin',
-
     # Custom user app MUST be before django.contrib.auth
     'userauths',
 
@@ -160,50 +176,75 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
-
-JAZZMIN_SETTINGS = {
-    "site_title": "Nepstay.com Admin",
-    "site_header": "Nepstay.com",
-    "site_brand": "Nepstay.com",
-    "site_logo": "images/image.png",
-    "login_logo": "images/image.png",
-    "login_logo_dark": "images/image.png",
-    "welcome_sign": "Welcome to Nepstay.com Admin",
-    "copyright": "Nepstay.com",
-    "search_model": ["userauths.User", "hotel.Hotel"],
-
-    "topmenu_links": [
-        {"name": "Home",  "url": "admin:index", "permissions": ["auth.view_user"]},
-    ],
-
-    "usermenu_links": [
-        {"name": "Support", "url": "#"},
-    ],
-
-    "show_sidebar": True,
-    "navigation_expanded": True,
-    "show_ui_builder": False,
-
-    "icons": {
-        "auth": "fas fa-users-cog",
-        "auth.user": "fas fa-user",
-        "hotel.hotel": "fas fa-hotel",
-    },
-
-    "default_icon_parents": "fas fa-folder",
-    "default_icon_children": "fas fa-file",
-    "custom_css": "css/admin_custom.css",
-}
-JAZZMIN_UI_TWEAKS = {
-    "theme": "flatly",
-    "dark_mode_theme": None,
-    "navbar": "navbar-white navbar-light",
-    "sidebar": "sidebar-light-primary",
-    "brand_colour": "navbar-info",
-    "accent": "accent-info",
-}
-
 LOGIN_URL = 'userauths:login'
 LOGOUT_URL = 'userauths:logout'
 LOGIN_REDIRECT_URL = 'hotel:index'
 LOGOUT_REDIRECT_URL = 'hotel:index'
+
+# Khalti ePayment configuration
+KHALTI_MODE = os.getenv('KHALTI_MODE', 'test').strip().lower()
+KHALTI_PUBLIC_KEY = os.getenv('KHALTI_PUBLIC_KEY', '0fbc57ceaf664c3baa5cf67816e4a4d1').strip()
+KHALTI_SECRET_KEY = os.getenv('KHALTI_SECRET_KEY', '2185aa6fc925483ebd22bffdc61e4f12').strip()
+
+if KHALTI_MODE == 'test':
+    _khalti_default_base = 'https://dev.khalti.com'
+else:
+    _khalti_default_base = 'https://khalti.com'
+
+KHALTI_INITIATE_URL = os.getenv('KHALTI_INITIATE_URL', f'{_khalti_default_base}/api/v2/epayment/initiate/').strip()
+KHALTI_LOOKUP_URL = os.getenv('KHALTI_LOOKUP_URL', f'{_khalti_default_base}/api/v2/epayment/lookup/').strip()
+
+
+def _to_bool(value, default=False):
+    if value is None:
+        return default
+    return str(value).strip().lower() in {'1', 'true', 'yes', 'on'}
+
+
+def _to_int(value, default=0):
+    try:
+        return int(str(value).strip())
+    except (TypeError, ValueError):
+        return default
+
+
+# Email (SMTP) configuration
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_PROVIDER = os.getenv('EMAIL_PROVIDER', 'gmail').strip().lower()
+
+_EMAIL_PROVIDER_DEFAULTS = {
+    'gmail': {
+        'host': 'smtp.gmail.com',
+        'port': 587,
+        'tls': True,
+    },
+    'sendgrid': {
+        'host': 'smtp.sendgrid.net',
+        'port': 587,
+        'tls': True,
+        'user': 'apikey',
+    },
+    'brevo': {
+        'host': 'smtp-relay.brevo.com',
+        'port': 587,
+        'tls': True,
+    },
+}
+
+_email_defaults = _EMAIL_PROVIDER_DEFAULTS.get(EMAIL_PROVIDER, _EMAIL_PROVIDER_DEFAULTS['gmail'])
+
+EMAIL_HOST = os.getenv('EMAIL_HOST', _email_defaults['host']).strip()
+EMAIL_PORT = _to_int(os.getenv('EMAIL_PORT'), _email_defaults['port'])
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', _email_defaults.get('user', '')).strip()
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', os.getenv('SMTP_MAIL', '')).strip()
+EMAIL_USE_TLS = _to_bool(os.getenv('EMAIL_USE_TLS'), _email_defaults.get('tls', True))
+EMAIL_USE_SSL = _to_bool(os.getenv('EMAIL_USE_SSL'), False)
+if EMAIL_USE_SSL:
+    EMAIL_USE_TLS = False
+
+EMAIL_TIMEOUT = _to_int(os.getenv('EMAIL_TIMEOUT'), 30)
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'no-reply@nepstay.com').strip()
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+
+# Used for generating absolute links in email if request object is unavailable.
+SITE_BASE_URL = os.getenv('SITE_BASE_URL', 'http://127.0.0.1:8000').strip()

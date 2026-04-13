@@ -3,56 +3,110 @@
 
 {% block title %}Contact Us | Nepstay{% endblock %}
 
+{% block extra_css %}
+<style>
+    .contact-hero {
+        border-radius: 1.4rem;
+        margin-top: 1.8rem;
+        overflow: hidden;
+        background: linear-gradient(120deg, rgba(8, 47, 73, 0.9), rgba(15, 118, 110, 0.86));
+        padding: 3rem 1rem;
+        color: #ffffff;
+        box-shadow: 0 20px 50px rgba(2, 6, 23, 0.2);
+    }
+
+    .contact-hero h1 {
+        font-size: clamp(2rem, 4vw, 3rem);
+        margin-bottom: 0.55rem;
+    }
+
+    .contact-grid {
+        padding: 2.7rem 0;
+    }
+
+    .contact-info-card {
+        height: 100%;
+        border-radius: 1rem;
+        border: 1px solid #d6e4ef;
+        background: #ffffff;
+        box-shadow: 0 14px 30px rgba(15, 23, 42, 0.06);
+    }
+
+    .contact-info-card .icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #e6fffb;
+        color: #0f766e;
+        font-size: 1.2rem;
+        margin-bottom: 0.8rem;
+    }
+
+    .contact-form-card {
+        border-radius: 1rem;
+        border: 1px solid #d6e4ef;
+        box-shadow: 0 18px 34px rgba(15, 23, 42, 0.08);
+    }
+
+    .contact-form-card .card-header {
+        background: linear-gradient(120deg, #0f766e, #0c4a6e);
+        color: #fff;
+        border: 0;
+        border-radius: 1rem 1rem 0 0;
+        font-weight: 700;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 
-<!-- Hero Section -->
-<section class="hero hero-bg" style="background-image: url('/media/images/image.png'); min-height: 60vh;">
-    <div class="hero-content text-center">
+<section class="contact-hero text-center">
+    <div class="container">
         <h1>Get In Touch</h1>
-        <p>We'd love to hear from you. Send us a message</p>
+        <p class="mb-0">We would love to hear from you. Send us a message and our team will respond quickly.</p>
     </div>
 </section>
 
-<!-- Contact Section -->
-<section class="section">
+<section class="contact-grid">
     <div class="container">
         <div class="row g-5">
-            <!-- Contact Info -->
             <div class="col-lg-4">
-                <div class="card mb-4">
+                <div class="card contact-info-card mb-4">
                     <div class="card-body">
-                        <div style="font-size: 2.5rem; color: var(--primary); margin-bottom: 1rem;">
-                            <i class="bi bi-geo-alt"></i>
+                        <div class="icon">
+                            <i class="bi bi-geo-alt-fill"></i>
                         </div>
-                        <h5 style="font-weight: 700; margin-bottom: 0.5rem;">Office Address</h5>
+                        <h5 class="fw-bold mb-2">Office Address</h5>
                         <p class="text-muted">Prativa tol<br>Pokhara, Nepal 44600</p>
                     </div>
                 </div>
 
-                <div class="card mb-4">
+                <div class="card contact-info-card mb-4">
                     <div class="card-body">
-                        <div style="font-size: 2.5rem; color: var(--primary); margin-bottom: 1rem;">
-                            <i class="bi bi-telephone"></i>
+                        <div class="icon">
+                            <i class="bi bi-telephone-fill"></i>
                         </div>
-                        <h5 style="font-weight: 700; margin-bottom: 0.5rem;">Phone</h5>
+                        <h5 class="fw-bold mb-2">Phone</h5>
                         <p class="text-muted">+977 9861466369<br>Support: +977 9861466369</p>
                     </div>
                 </div>
 
-                <div class="card">
+                <div class="card contact-info-card">
                     <div class="card-body">
-                        <div style="font-size: 2.5rem; color: var(--primary); margin-bottom: 1rem;">
-                            <i class="bi bi-envelope"></i>
+                        <div class="icon">
+                            <i class="bi bi-envelope-fill"></i>
                         </div>
-                        <h5 style="font-weight: 700; margin-bottom: 0.5rem;">Email</h5>
+                        <h5 class="fw-bold mb-2">Email</h5>
                         <p class="text-muted">nepstay@gmail.com<br>nepstay@gmail.com</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Contact Form -->
             <div class="col-lg-8">
-                <div class="card">
+                <div class="card contact-form-card">
                     <div class="card-header">
                         <i class="bi bi-pencil-square"></i> Send us a Message
                     </div>
@@ -105,7 +159,6 @@
     </div>
 </section>
 
-<!-- FAQ Section -->
 <section class="section bg-light">
     <div class="container">
         <h2 class="section-title">Frequently Asked Questions</h2>

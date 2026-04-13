@@ -4,448 +4,218 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up | Nepstay</title>
-
+    <title>Register | Nepstay</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'css/modern.css' %}">
-
-    <style>
-        :root {
-            --signup-deep: #1e3a5f;
-            --signup-sky: #2d79a7;
-            --signup-sand: #f7d5a8;
-            --signup-foam: #f5fbff;
-            --signup-text: #162f44;
-            --signup-muted: #5a748c;
-            --signup-border: #c8deeb;
-            --signup-focus: #2a8f8d;
-        }
-
-        body {
-            min-height: 100vh;
-            margin: 0;
-            font-family: 'Manrope', sans-serif;
-            color: var(--signup-text);
-            background:
-                radial-gradient(circle at 14% 10%, rgba(87, 187, 188, 0.28), transparent 34%),
-                radial-gradient(circle at 86% 92%, rgba(247, 213, 168, 0.36), transparent 32%),
-                linear-gradient(145deg, #e7f2fb 0%, #f2fbf7 50%, #fff8ef 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1.4rem;
-        }
-
-        .auth-layout {
-            width: min(1140px, 100%);
-            min-height: 740px;
-            display: grid;
-            grid-template-columns: 1fr 1.15fr;
-            border-radius: 1.7rem;
-            border: 1px solid rgba(22, 58, 88, 0.12);
-            box-shadow: 0 30px 75px rgba(18, 54, 79, 0.2);
-            overflow: hidden;
-            background: #fff;
-            animation: entryFade .65s ease;
-        }
-
-        .promo-panel {
-            position: relative;
-            background: linear-gradient(160deg, rgba(30, 58, 95, 0.98) 0%, rgba(45, 121, 167, 0.96) 62%, rgba(26, 151, 145, 0.94) 100%);
-            color: #ecf8ff;
-            padding: 2.2rem;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .promo-panel::before {
-            content: "";
-            position: absolute;
-            inset: auto -12% -18% auto;
-            width: 260px;
-            height: 260px;
-            border-radius: 50%;
-            background: rgba(247, 213, 168, 0.25);
-        }
-
-        .brand {
-            font-family: 'Outfit', sans-serif;
-            font-weight: 700;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 1.4rem;
-            position: relative;
-            z-index: 2;
-        }
-
-        .promo-copy {
-            position: relative;
-            z-index: 2;
-        }
-
-        .promo-copy h1 {
-            font-family: 'Outfit', sans-serif;
-            font-size: clamp(1.95rem, 3.7vw, 2.7rem);
-            line-height: 1.1;
-            margin: 0.5rem 0 0.8rem;
-        }
-
-        .promo-copy p {
-            max-width: 34ch;
-            margin: 0;
-            opacity: 0.9;
-        }
-
-        .benefits {
-            margin-top: 1.4rem;
-            display: grid;
-            gap: 0.75rem;
-        }
-
-        .benefit {
-            display: flex;
-            align-items: center;
-            gap: 0.55rem;
-            font-size: 0.94rem;
-        }
-
-        .benefit i {
-            color: var(--signup-sand);
-        }
-
-        .form-panel {
-            background: var(--signup-foam);
-            padding: 1.9rem 2rem;
-        }
-
-        .form-header h2 {
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.7rem;
-            margin-bottom: 0.3rem;
-        }
-
-        .form-header p {
-            margin: 0;
-            color: var(--signup-muted);
-        }
-
-        .auth-form {
-            margin-top: 1.1rem;
-        }
-
-        .field-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 0.8rem;
-        }
-
-        .field-group {
-            margin-bottom: 0.8rem;
-        }
-
-        .field-group.full {
-            grid-column: 1 / -1;
-        }
-
-        .field-group label {
-            display: block;
-            font-weight: 700;
-            font-size: 0.88rem;
-            margin-bottom: 0.35rem;
-            color: #1c3a54;
-        }
-
-        .auth-form input,
-        .auth-form select {
-            width: 100%;
-            border-radius: 0.8rem;
-            border: 1px solid var(--signup-border);
-            background: #fff;
-            padding: 0.74rem 0.9rem;
-            font-size: 0.94rem;
-            transition: border-color .2s ease, box-shadow .2s ease;
-        }
-
-        .auth-form input:focus,
-        .auth-form select:focus {
-            outline: none;
-            border-color: var(--signup-focus);
-            box-shadow: 0 0 0 0.2rem rgba(42, 143, 141, 0.2);
-        }
-
-        .password-wrap {
-            position: relative;
-        }
-
-        .password-wrap input {
-            padding-right: 2.35rem;
-        }
-
-        .password-toggle {
-            position: absolute;
-            right: 0.7rem;
-            top: 50%;
-            transform: translateY(-50%);
-            border: none;
-            background: transparent;
-            color: #57708a;
-            padding: 0.2rem;
-        }
-
-        .password-note {
-            border-radius: 0.8rem;
-            background: #e9f6ff;
-            border: 1px solid #cce6f8;
-            padding: 0.7rem 0.8rem;
-            margin: 0.2rem 0 0.9rem;
-            color: #2d5876;
-            font-size: 0.84rem;
-        }
-
-        .btn-submit {
-            width: 100%;
-            border: none;
-            border-radius: 0.85rem;
-            padding: 0.86rem 1rem;
-            font-weight: 700;
-            color: #fff;
-            background: linear-gradient(135deg, #1f7470 0%, #1aa09a 100%);
-            box-shadow: 0 14px 25px rgba(25, 133, 127, 0.28);
-            transition: transform .24s ease, box-shadow .24s ease;
-        }
-
-        .btn-submit:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 18px 31px rgba(25, 133, 127, 0.34);
-            color: #fff;
-        }
-
-        .invalid-feedback {
-            display: block;
-            font-size: 0.81rem;
-            margin-top: 0.25rem;
-        }
-
-        .auth-footer {
-            margin-top: 0.85rem;
-            text-align: center;
-            color: var(--signup-muted);
-            font-size: 0.92rem;
-        }
-
-        .auth-footer a {
-            color: #1f7470;
-            text-decoration: none;
-            font-weight: 700;
-        }
-
-        .auth-footer a:hover {
-            text-decoration: underline;
-        }
-
-        .alert {
-            border: none;
-            border-radius: 0.8rem;
-            margin-bottom: 0.8rem;
-        }
-
-        @keyframes entryFade {
-            from {
-                opacity: 0;
-                transform: translateY(14px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @media (max-width: 991px) {
-            .auth-layout {
-                grid-template-columns: 1fr;
-                min-height: auto;
-            }
-
-            .promo-panel {
-                padding: 1.5rem;
-            }
-
-            .promo-copy p {
-                max-width: none;
-            }
-        }
-
-        @media (max-width: 640px) {
-            body {
-                padding: 0.8rem;
-            }
-
-            .field-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .form-panel {
-                padding: 1.3rem 1rem;
-            }
-
-            .promo-panel {
-                padding: 1.2rem 1rem;
-            }
-        }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/auth-clean.css' %}">
 </head>
-<body>
-    <div class="auth-layout">
-        <section class="promo-panel">
-            <div class="brand"><i class="bi bi-buildings-fill"></i> Nepstay</div>
-            <div class="promo-copy">
-                <h1>Create your traveler or agent profile.</h1>
-                <p>Join Nepstay and unlock a faster way to discover hotels, manage stays, and grow your bookings.</p>
-                <div class="benefits">
-                    <div class="benefit"><i class="bi bi-stars"></i> Personalized stay recommendations</div>
-                    <div class="benefit"><i class="bi bi-stars"></i> Role-based traveler and agent experience</div>
-                    <div class="benefit"><i class="bi bi-stars"></i> Secure onboarding and profile management</div>
+<body class="auth-page">
+    <div class="auth-card auth-card-wide" role="main">
+        <h1 class="auth-title">Register</h1>
+        <p class="auth-subtitle">Create your account to continue.</p>
+
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {% for error in form.non_field_errors %}
+            <div>{{ error }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="{% url 'userauths:register' %}" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+
+            <div class="auth-grid">
+                <div class="auth-field full">
+                    <div class="auth-input-wrap">
+                        <i class="bi bi-person-vcard-fill auth-icon" aria-hidden="true"></i>
+                        <input
+                            type="text"
+                            id="id_full_name"
+                            name="full_name"
+                            class="auth-input"
+                            placeholder="Full Name"
+                            value="{{ form.full_name.value|default_if_none:'' }}"
+                            required
+                        >
+                    </div>
+                    {% if form.full_name.errors %}
+                    <div class="auth-error">{{ form.full_name.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="auth-field">
+                    <div class="auth-input-wrap">
+                        <i class="bi bi-person-fill auth-icon" aria-hidden="true"></i>
+                        <input
+                            type="text"
+                            id="id_username"
+                            name="username"
+                            class="auth-input"
+                            placeholder="Username"
+                            value="{{ form.username.value|default_if_none:'' }}"
+                            required
+                        >
+                    </div>
+                    {% if form.username.errors %}
+                    <div class="auth-error">{{ form.username.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="auth-field">
+                    <div class="auth-input-wrap">
+                        <i class="bi bi-telephone-fill auth-icon" aria-hidden="true"></i>
+                        <input
+                            type="text"
+                            id="id_phone"
+                            name="phone"
+                            class="auth-input"
+                            placeholder="Phone"
+                            value="{{ form.phone.value|default_if_none:'' }}"
+                            required
+                        >
+                    </div>
+                    {% if form.phone.errors %}
+                    <div class="auth-error">{{ form.phone.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="auth-field full">
+                    <div class="auth-input-wrap">
+                        <i class="bi bi-envelope-fill auth-icon" aria-hidden="true"></i>
+                        <input
+                            type="email"
+                            id="id_email"
+                            name="email"
+                            class="auth-input"
+                            placeholder="Email Address"
+                            value="{{ form.email.value|default_if_none:'' }}"
+                            required
+                        >
+                    </div>
+                    {% if form.email.errors %}
+                    <div class="auth-error">{{ form.email.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="auth-field">
+                    <div class="auth-input-wrap">
+                        <i class="bi bi-briefcase-fill auth-icon" aria-hidden="true"></i>
+                        <select id="id_role" name="role" class="auth-select" required>
+                            <option value="" {% if not form.role.value %}selected{% endif %}>Account Type</option>
+                            <option value="customer" {% if form.role.value == 'customer' %}selected{% endif %}>Customer</option>
+                            <option value="agent" {% if form.role.value == 'agent' %}selected{% endif %}>Agent</option>
+                        </select>
+                    </div>
+                    {% if form.role.errors %}
+                    <div class="auth-error">{{ form.role.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="auth-field">
+                    <div class="auth-input-wrap">
+                        <i class="bi bi-gender-ambiguous auth-icon" aria-hidden="true"></i>
+                        <select id="id_gender" name="gender" class="auth-select" required>
+                            <option value="" {% if not form.gender.value %}selected{% endif %}>Gender</option>
+                            <option value="male" {% if form.gender.value == 'male' %}selected{% endif %}>Male</option>
+                            <option value="female" {% if form.gender.value == 'female' %}selected{% endif %}>Female</option>
+                            <option value="other" {% if form.gender.value == 'other' %}selected{% endif %}>Other</option>
+                        </select>
+                    </div>
+                    {% if form.gender.errors %}
+                    <div class="auth-error">{{ form.gender.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="auth-field full" id="agentDocumentField" style="display: none;">
+                    <label for="id_agent_document_photo" class="auth-help">Document Photo (required for agent account)</label>
+                    <input
+                        type="file"
+                        id="id_agent_document_photo"
+                        name="agent_document_photo"
+                        class="auth-file"
+                        accept="image/*"
+                    >
+                    {% if form.agent_document_photo.errors %}
+                    <div class="auth-error">{{ form.agent_document_photo.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="auth-field">
+                    <div class="auth-input-wrap">
+                        <i class="bi bi-lock-fill auth-icon" aria-hidden="true"></i>
+                        <input
+                            type="password"
+                            id="id_password"
+                            name="password"
+                            class="auth-input"
+                            placeholder="Password"
+                            required
+                        >
+                        <button type="button" class="auth-toggle password-toggle" data-target="id_password" aria-label="Toggle password visibility">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                    {% if form.password.errors %}
+                    <div class="auth-error">{{ form.password.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="auth-field">
+                    <div class="auth-input-wrap">
+                        <i class="bi bi-shield-lock-fill auth-icon" aria-hidden="true"></i>
+                        <input
+                            type="password"
+                            id="id_password2"
+                            name="password2"
+                            class="auth-input"
+                            placeholder="Confirm Password"
+                            required
+                        >
+                        <button type="button" class="auth-toggle password-toggle" data-target="id_password2" aria-label="Toggle confirm password visibility">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                    {% if form.password2.errors %}
+                    <div class="auth-error">{{ form.password2.errors.0 }}</div>
+                    {% endif %}
                 </div>
             </div>
-            <div class="small opacity-75">Get started in under a minute.</div>
-        </section>
 
-        <section class="form-panel">
-            <div class="form-header">
-                <h2>Create account</h2>
-                <p>Fill in your details to continue.</p>
-            </div>
+            <button type="submit" class="auth-btn">Create account</button>
+        </form>
 
-            {% if messages %}
-                {% for message in messages %}
-                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-
-            <form method="POST" action="{% url 'userauths:register' %}" class="auth-form">
-                {% csrf_token %}
-
-                {% if form.non_field_errors %}
-                <div class="alert alert-danger">
-                    {% for error in form.non_field_errors %}
-                    <div>{{ error }}</div>
-                    {% endfor %}
-                </div>
-                {% endif %}
-
-                <div class="field-grid">
-                    <div class="field-group full">
-                        <label for="{{ form.full_name.id_for_label }}">Full Name</label>
-                        {{ form.full_name }}
-                        {% if form.full_name.errors %}
-                        <div class="invalid-feedback">
-                            {% for error in form.full_name.errors %}<span>{{ error }}</span>{% endfor %}
-                        </div>
-                        {% endif %}
-                    </div>
-
-                    <div class="field-group">
-                        <label for="{{ form.username.id_for_label }}">Username</label>
-                        {{ form.username }}
-                        {% if form.username.errors %}
-                        <div class="invalid-feedback">
-                            {% for error in form.username.errors %}<span>{{ error }}</span>{% endfor %}
-                        </div>
-                        {% endif %}
-                    </div>
-
-                    <div class="field-group">
-                        <label for="{{ form.phone.id_for_label }}">Phone Number</label>
-                        {{ form.phone }}
-                        {% if form.phone.errors %}
-                        <div class="invalid-feedback">
-                            {% for error in form.phone.errors %}<span>{{ error }}</span>{% endfor %}
-                        </div>
-                        {% endif %}
-                    </div>
-
-                    <div class="field-group full">
-                        <label for="{{ form.email.id_for_label }}">Email Address</label>
-                        {{ form.email }}
-                        {% if form.email.errors %}
-                        <div class="invalid-feedback">
-                            {% for error in form.email.errors %}<span>{{ error }}</span>{% endfor %}
-                        </div>
-                        {% endif %}
-                    </div>
-
-                    <div class="field-group full">
-                        <label for="{{ form.role.id_for_label }}">Account Type</label>
-                        {{ form.role }}
-                        {% if form.role.errors %}
-                        <div class="invalid-feedback">
-                            {% for error in form.role.errors %}<span>{{ error }}</span>{% endfor %}
-                        </div>
-                        {% endif %}
-                    </div>
-
-                    <div class="field-group full">
-                        <label for="{{ form.gender.id_for_label }}">Gender</label>
-                        {{ form.gender }}
-                        {% if form.gender.errors %}
-                        <div class="invalid-feedback">
-                            {% for error in form.gender.errors %}<span>{{ error }}</span>{% endfor %}
-                        </div>
-                        {% endif %}
-                    </div>
-
-                    <div class="field-group">
-                        <label for="{{ form.password.id_for_label }}">Password</label>
-                        <div class="password-wrap">
-                            {{ form.password }}
-                            <button type="button" class="password-toggle" data-target="id_password" aria-label="Toggle password visibility">
-                                <i class="bi bi-eye"></i>
-                            </button>
-                        </div>
-                        {% if form.password.errors %}
-                        <div class="invalid-feedback">
-                            {% for error in form.password.errors %}<span>{{ error }}</span>{% endfor %}
-                        </div>
-                        {% endif %}
-                    </div>
-
-                    <div class="field-group">
-                        <label for="{{ form.password2.id_for_label }}">Confirm Password</label>
-                        <div class="password-wrap">
-                            {{ form.password2 }}
-                            <button type="button" class="password-toggle" data-target="id_password2" aria-label="Toggle confirm password visibility">
-                                <i class="bi bi-eye"></i>
-                            </button>
-                        </div>
-                        {% if form.password2.errors %}
-                        <div class="invalid-feedback">
-                            {% for error in form.password2.errors %}<span>{{ error }}</span>{% endfor %}
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <div class="password-note">
-                    Use at least 8 characters with a mix of letters, numbers, and symbols for better security.
-                </div>
-
-                <button type="submit" class="btn-submit">
-                    <i class="bi bi-person-check"></i> Create Account
-                </button>
-            </form>
-
-            <div class="auth-footer">
-                <p>Already have an account? <a href="{% url 'userauths:login' %}">Sign in</a></p>
-            </div>
-        </section>
+        <div class="auth-link-row">
+            Already have an account?
+            <a href="{% url 'userauths:login' %}">Log in</a>
+        </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            var roleField = document.getElementById('id_role');
+            var agentDocumentField = document.getElementById('agentDocumentField');
+
+            function toggleAgentDocumentField() {
+                if (!roleField || !agentDocumentField) {
+                    return;
+                }
+                var shouldShow = roleField.value === 'agent';
+                agentDocumentField.style.display = shouldShow ? 'block' : 'none';
+            }
+
+            if (roleField) {
+                toggleAgentDocumentField();
+                roleField.addEventListener('change', toggleAgentDocumentField);
+            }
+
             var toggles = document.querySelectorAll('.password-toggle');
             toggles.forEach(function (toggle) {
                 toggle.addEventListener('click', function () {
@@ -462,7 +232,5 @@
             });
         });
     </script>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

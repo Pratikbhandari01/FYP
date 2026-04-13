@@ -2,18 +2,172 @@
 
 {% block title %}{{ hotel.name }} | Hotel Details{% endblock %}
 
+{% block extra_css %}
+<style>
+    .detail-hero {
+        position: relative;
+        overflow: hidden;
+        border-radius: 1.4rem;
+        margin: 2rem auto 0;
+        padding: 3rem 0;
+        background: linear-gradient(125deg, rgba(8, 47, 73, 0.92) 0%, rgba(15, 118, 110, 0.88) 55%, rgba(14, 116, 144, 0.84) 100%);
+        color: #ffffff;
+        box-shadow: 0 24px 58px rgba(2, 6, 23, 0.22);
+    }
+
+    .detail-hero::after {
+        content: "";
+        position: absolute;
+        width: 260px;
+        height: 260px;
+        border-radius: 50%;
+        right: -70px;
+        top: -80px;
+        background: rgba(255, 255, 255, 0.09);
+    }
+
+    .detail-kicker {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        font-weight: 700;
+        margin-bottom: 0.65rem;
+        color: rgba(255, 255, 255, 0.78);
+    }
+
+    .detail-heading {
+        font-size: clamp(2rem, 4vw, 3.1rem);
+        margin-bottom: 0.75rem;
+    }
+
+    .detail-desc {
+        color: rgba(255, 255, 255, 0.9);
+        max-width: 64ch;
+        margin-bottom: 1rem;
+    }
+
+    .detail-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.55rem;
+    }
+
+    .detail-meta span {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        background: rgba(255, 255, 255, 0.14);
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        border-radius: 999px;
+        padding: 0.45rem 0.78rem;
+        font-size: 0.88rem;
+    }
+
+    .detail-section {
+        padding: 3.1rem 0 0.6rem;
+    }
+
+    .detail-section-title {
+        margin-bottom: 0.35rem;
+    }
+
+    .detail-section-subtitle {
+        color: #64748b;
+        margin-bottom: 1.6rem;
+    }
+
+    .room-option {
+        border-radius: 1.1rem;
+        border: 1px solid #d6e4ef;
+        background: #ffffff;
+        overflow: hidden;
+        box-shadow: 0 16px 35px rgba(15, 23, 42, 0.08);
+        transition: transform .25s ease, box-shadow .25s ease;
+        height: 100%;
+    }
+
+    .room-option:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 24px 48px rgba(15, 23, 42, 0.12);
+    }
+
+    .room-option img {
+        width: 100%;
+        height: 215px;
+        object-fit: cover;
+    }
+
+    .room-option .body {
+        padding: 1rem;
+    }
+
+    .room-option .meta {
+        display: grid;
+        gap: 0.35rem;
+        font-size: 0.89rem;
+        color: #475569;
+        margin-bottom: 0.95rem;
+    }
+
+    .room-option .price {
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: #0f172a;
+    }
+
+    .review-shell {
+        margin-top: 3rem;
+    }
+
+    .review-card {
+        border-radius: 1rem;
+        border: 1px solid #d6e4ef;
+        background: #ffffff;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.07);
+        padding: 1rem;
+        height: 100%;
+    }
+
+    .star-row {
+        color: #f59e0b;
+        font-size: 0.95rem;
+        letter-spacing: 0.04em;
+    }
+
+    .star-off {
+        color: #cbd5e1;
+    }
+
+    .review-meta {
+        color: #64748b;
+        font-size: 0.84rem;
+    }
+
+    @media (max-width: 767.98px) {
+        .detail-hero {
+            margin-top: 1rem;
+            border-radius: 1rem;
+            padding: 2rem 0;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<section class="hero hero-bg"{% if hotel.image %} style="background-image: url('{{ hotel.image.url }}');"{% endif %}>
-    <div class="container py-5 text-white">
+<section class="detail-hero">
+    <div class="container py-2">
         <div class="row">
             <div class="col-lg-8">
-                <h1 class="display-5">{{ hotel.name }}</h1>
-                <p class="lead">{{ hotel.description|default:'No description available yet.' }}</p>
-                <p><i class="bi bi-geo-alt"></i> {{ hotel.location }}</p>
-                <p><i class="bi bi-telephone"></i> {{ hotel.mobile }}</p>
-                <p><i class="bi bi-envelope"></i> {{ hotel.email }}</p>
+                <p class="detail-kicker mb-0">Premium Destination</p>
+                <h1 class="detail-heading">{{ hotel.name }}</h1>
+                <p class="detail-desc">{{ hotel.description|default:'No description available yet.' }}</p>
+                <div class="detail-meta">
+                    <span><i class="bi bi-geo-alt"></i> {{ hotel.location|default:'Nepal' }}</span>
+                    <span><i class="bi bi-telephone"></i> {{ hotel.mobile|default:'N/A' }}</span>
+                    <span><i class="bi bi-envelope"></i> {{ hotel.email|default:'N/A' }}</span>
+                </div>
             </div>
-            <div class="col-lg-4 text-lg-end mt-4 mt-lg-0">
+            <div class="col-lg-4 text-lg-end mt-4 mt-lg-0 d-flex align-items-end justify-content-lg-end">
                 <a href="{% url 'hotel:rooms' %}" class="btn btn-outline-light">
                     <i class="bi bi-door-closed"></i> Browse All Rooms
                 </a>
@@ -22,33 +176,37 @@
     </div>
 </section>
 
-<div class="container my-5">
+<div class="container detail-section">
     <div class="row mb-4">
         <div class="col-12">
-            <h2 class="h4">Available Rooms at {{ hotel.name }}</h2>
-            <p class="text-muted">Showing all available rooms for this hotel.</p>
+            <h2 class="h4 detail-section-title">Available Rooms at {{ hotel.name }}</h2>
+            <p class="detail-section-subtitle">Choose from available rooms and reserve instantly.</p>
         </div>
     </div>
 
     <div class="row g-4">
         {% for room in rooms %}
         <div class="col-md-6 col-xl-4">
-            <div class="card h-100 shadow-sm">
+            <div class="room-option">
                 {% if room.room_type.image or hotel.image %}
                 <img
                     src="{% if room.room_type.image %}{{ room.room_type.image.url }}{% else %}{{ hotel.image.url }}{% endif %}"
-                    class="card-img-top"
                     alt="{{ room.room_type.name }}"
-                    style="height:220px; object-fit:cover;"
                 >
                 {% endif %}
-                <div class="card-body d-flex flex-column">
-                    <h5 class="card-title mb-2">Room {{ room.room_number }}</h5>
-                    <p class="mb-1"><strong>Type:</strong> {{ room.room_type.name }}</p>
-                    <p class="mb-1"><strong>Price:</strong> NPR {{ room.price }}</p>
-                    <p class="mb-2"><strong>Beds:</strong> {{ room.room_type.no_of_beds }}</p>
-                    <span class="badge bg-success mb-3">Available</span>
+                <div class="body d-flex flex-column">
+                    <h5 class="mb-2">Room {{ room.room_number }}</h5>
+                    <div class="meta">
+                        <span><strong>Type:</strong> {{ room.room_type.name }}</span>
+                        <span><strong>Beds:</strong> {{ room.room_type.no_of_beds }}</span>
+                        <span class="price">NPR {{ room.price }}</span>
+                    </div>
+                    <span class="badge bg-success mb-3 align-self-start">Available</span>
+                    {% if request.user.is_authenticated and request.user.role == 'agent' %}
+                    <span class="btn btn-outline-secondary mt-auto disabled">Agents cannot book</span>
+                    {% else %}
                     <a href="{% url 'hotel:book_room' room.id %}" class="btn btn-primary mt-auto"><i class="bi bi-calendar-check"></i> Book Now</a>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -58,5 +216,75 @@
         </div>
         {% endfor %}
     </div>
+
+    <section class="review-shell">
+        <div class="row g-4">
+            <div class="col-lg-5">
+                <div class="review-card">
+                    <h3 class="h5 mb-2">Guest Reviews</h3>
+                    <p class="text-muted mb-2">Average rating based on customer feedback.</p>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <div class="star-row">
+                            <i class="bi {% if hotel.average_rating >= 1 %}bi-star-fill{% else %}bi-star star-off{% endif %}"></i>
+                            <i class="bi {% if hotel.average_rating >= 2 %}bi-star-fill{% else %}bi-star star-off{% endif %}"></i>
+                            <i class="bi {% if hotel.average_rating >= 3 %}bi-star-fill{% else %}bi-star star-off{% endif %}"></i>
+                            <i class="bi {% if hotel.average_rating >= 4 %}bi-star-fill{% else %}bi-star star-off{% endif %}"></i>
+                            <i class="bi {% if hotel.average_rating >= 5 %}bi-star-fill{% else %}bi-star star-off{% endif %}"></i>
+                        </div>
+                        <strong>{{ hotel.average_rating }}/5</strong>
+                    </div>
+                    <p class="text-muted small mb-0">{{ hotel.reviews_count }} review(s)</p>
+
+                    {% if request.user.is_authenticated and request.user.role == 'customer' and review_form %}
+                    <hr>
+                    <h4 class="h6">Write your review</h4>
+                    <form method="POST" action="{% url 'hotel:add_review' hotel.id %}">
+                        {% csrf_token %}
+                        <div class="mb-2">
+                            <label class="form-label" for="id_rating">Rating</label>
+                            {{ review_form.rating }}
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label" for="id_comment">Comment</label>
+                            {{ review_form.comment }}
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Submit Review</button>
+                    </form>
+                    {% elif request.user.is_authenticated and request.user.role == 'agent' %}
+                    <p class="text-muted mt-3 mb-0">Agent accounts cannot submit reviews.</p>
+                    {% else %}
+                    <p class="text-muted mt-3 mb-0">Please <a href="{% url 'userauths:login' %}">log in</a> as a customer to leave a review.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="row g-3">
+                    {% for review in reviews %}
+                    <div class="col-12">
+                        <article class="review-card">
+                            <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
+                                <strong>{{ review.user.full_name|default:review.user.username }}</strong>
+                                <span class="review-meta">{{ review.created_at|date:'M d, Y' }}</span>
+                            </div>
+                            <div class="star-row mb-2">
+                                <i class="bi {% if review.rating >= 1 %}bi-star-fill{% else %}bi-star star-off{% endif %}"></i>
+                                <i class="bi {% if review.rating >= 2 %}bi-star-fill{% else %}bi-star star-off{% endif %}"></i>
+                                <i class="bi {% if review.rating >= 3 %}bi-star-fill{% else %}bi-star star-off{% endif %}"></i>
+                                <i class="bi {% if review.rating >= 4 %}bi-star-fill{% else %}bi-star star-off{% endif %}"></i>
+                                <i class="bi {% if review.rating >= 5 %}bi-star-fill{% else %}bi-star star-off{% endif %}"></i>
+                            </div>
+                            <p class="mb-0 text-muted">{{ review.comment|default:'No comment provided.' }}</p>
+                        </article>
+                    </div>
+                    {% empty %}
+                    <div class="col-12">
+                        <div class="alert alert-info mb-0">No reviews yet. Be the first to review this hotel.</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </section>
 </div>
 {% endblock %}

@@ -1,24 +1,339 @@
 {% extends "partials/base.html" %}
+
+{% block title %}My Bookings | NepStay{% endblock %}
+
+{% block extra_css %}
+<style>
+    .bookings-shell {
+        --booking-bg: #f6f8fb;
+        --booking-surface: #ffffff;
+        --booking-ink: #132238;
+        --booking-muted: #5c6b7d;
+        --booking-line: #d9e2ec;
+        --booking-accent: #0f766e;
+        --booking-accent-soft: #ccfbf1;
+        --booking-alert: #dc2626;
+        --booking-alert-soft: #fee2e2;
+        --booking-warn: #b45309;
+        --booking-warn-soft: #ffedd5;
+        --booking-ok: #166534;
+        --booking-ok-soft: #dcfce7;
+        background:
+            radial-gradient(circle at 10% 10%, rgba(15, 118, 110, 0.11), transparent 42%),
+            radial-gradient(circle at 85% 30%, rgba(249, 115, 22, 0.11), transparent 36%),
+            linear-gradient(180deg, #f9fbff 0%, #f4f7fb 100%);
+        padding: 3.5rem 0 4.25rem;
+        min-height: calc(100vh - 240px);
+    }
+
+    .bookings-hero {
+        background: linear-gradient(120deg, #0f172a 0%, #134e4a 55%, #0e7490 100%);
+        border-radius: 24px;
+        color: #f8fafc;
+        padding: 2rem;
+        box-shadow: 0 20px 50px rgba(2, 8, 23, 0.22);
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+
+    .bookings-hero::after {
+        content: "";
+        position: absolute;
+        right: -80px;
+        top: -80px;
+        width: 220px;
+        height: 220px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    .bookings-title {
+        font-family: "Sora", sans-serif;
+        font-size: clamp(1.7rem, 2.8vw, 2.4rem);
+        margin-bottom: 0.35rem;
+        font-weight: 700;
+        letter-spacing: 0.01em;
+    }
+
+    .bookings-subtitle {
+        margin: 0;
+        color: rgba(248, 250, 252, 0.86);
+        max-width: 680px;
+    }
+
+    .booking-summary-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+        border-radius: 999px;
+        padding: 0.5rem 0.9rem;
+        font-size: 0.87rem;
+        font-weight: 600;
+        margin-top: 0.95rem;
+    }
+
+    .booking-card-wrap {
+        margin-top: 1rem;
+    }
+
+    .booking-card {
+        background: rgba(255, 255, 255, 0.86);
+        backdrop-filter: blur(8px);
+        border: 1px solid var(--booking-line);
+        border-radius: 20px;
+        overflow: hidden;
+        height: 100%;
+        box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+        transform: translateY(10px);
+        opacity: 0;
+        animation: booking-rise 0.55s ease-out forwards;
+        animation-delay: calc(var(--delay, 0) * 70ms);
+    }
+
+    .booking-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 22px 42px rgba(2, 8, 23, 0.15);
+        border-color: #b8c6d6;
+    }
+
+    .booking-card-head {
+        padding: 1rem 1.15rem 0.75rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px dashed #dde7f1;
+    }
+
+    .hotel-mark {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: linear-gradient(140deg, #134e4a 0%, #0891b2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ecfeff;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    .hotel-name {
+        color: var(--booking-ink);
+        font-weight: 700;
+        margin: 0;
+        font-family: "Sora", sans-serif;
+        font-size: 1.03rem;
+    }
+
+    .hotel-meta {
+        color: var(--booking-muted);
+        margin: 0.2rem 0 0;
+        font-size: 0.88rem;
+    }
+
+    .booking-status {
+        border-radius: 999px;
+        padding: 0.35rem 0.72rem;
+        font-size: 0.76rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .booking-status--completed {
+        color: var(--booking-ok);
+        background: var(--booking-ok-soft);
+    }
+
+    .booking-status--pending {
+        color: var(--booking-warn);
+        background: var(--booking-warn-soft);
+    }
+
+    .booking-status--failed {
+        color: var(--booking-alert);
+        background: var(--booking-alert-soft);
+    }
+
+    .booking-card-body {
+        padding: 0.95rem 1.15rem 1.1rem;
+    }
+
+    .booking-line {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 0.55rem;
+        color: #27384d;
+    }
+
+    .booking-line .label {
+        color: var(--booking-muted);
+        font-size: 0.87rem;
+    }
+
+    .booking-line .value {
+        text-align: right;
+        font-weight: 600;
+        font-size: 0.92rem;
+    }
+
+    .booking-total {
+        border-top: 1px solid #e4ebf3;
+        margin-top: 0.75rem;
+        padding-top: 0.8rem;
+    }
+
+    .booking-total .value {
+        font-size: 1.05rem;
+        color: #0f172a;
+    }
+
+    .bookings-empty {
+        margin-top: 1rem;
+        background: var(--booking-surface);
+        border: 1px solid #dfe8f2;
+        border-radius: 20px;
+        text-align: center;
+        padding: 2.6rem 1rem;
+        box-shadow: 0 12px 34px rgba(2, 8, 23, 0.08);
+    }
+
+    .bookings-empty i {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: var(--booking-accent-soft);
+        color: var(--booking-accent);
+        font-size: 1.6rem;
+    }
+
+    .bookings-empty h3 {
+        margin: 1rem 0 0.45rem;
+        font-family: "Sora", sans-serif;
+        color: #10253b;
+    }
+
+    .bookings-empty p {
+        color: var(--booking-muted);
+        max-width: 520px;
+        margin: 0 auto 1.2rem;
+    }
+
+    .btn-browse {
+        border: 0;
+        color: #ffffff;
+        background: linear-gradient(135deg, #0f766e 0%, #0891b2 100%);
+        border-radius: 999px;
+        padding: 0.7rem 1.1rem;
+        font-weight: 600;
+    }
+
+    .btn-browse:hover {
+        filter: brightness(1.05);
+        color: #ffffff;
+    }
+
+    @keyframes booking-rise {
+        from {
+            opacity: 0;
+            transform: translateY(12px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        .bookings-shell {
+            padding: 2.3rem 0 3rem;
+        }
+
+        .bookings-hero {
+            border-radius: 18px;
+            padding: 1.35rem;
+        }
+
+        .booking-card-head,
+        .booking-card-body {
+            padding-left: 0.92rem;
+            padding-right: 0.92rem;
+        }
+
+        .booking-line .value {
+            max-width: 57%;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<main class="mb-4">
+<section class="bookings-shell">
     <div class="container">
-        <h1>My Bookings</h1>
-        <div class="row">
+        <div class="bookings-hero">
+            <h1 class="bookings-title">My Bookings</h1>
+            <p class="bookings-subtitle">Track your stays, check your payment status, and revisit trip details in one place.</p>
+            <span class="booking-summary-chip">
+                <i class="fas fa-receipt"></i>
+                {{ bookings|length }} booking{{ bookings|length|pluralize }}
+            </span>
+        </div>
+
+        {% if bookings %}
+        <div class="row g-4 booking-card-wrap">
             {% for booking in bookings %}
-            <div class="col-md-4">
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ booking.hotel.name }}</h5>
-                        <p class="card-text">Room: {{ booking.room.room_number }}</p>
-                        <p class="card-text">Check-in: {{ booking.check_in }}</p>
-                        <p class="card-text">Check-out: {{ booking.check_out }}</p>
-                        <p class="card-text">Total: NPR {{ booking.total_price }}</p>
-                        <p class="card-text">Status: {{ booking.payment_status }}</p>
+            <div class="col-12 col-md-6 col-xl-4">
+                <article class="booking-card" style="--delay: {{ forloop.counter0 }};">
+                    <div class="booking-card-head">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="hotel-mark">{{ booking.hotel.name|first|upper }}</div>
+                            <div>
+                                <h2 class="hotel-name">{{ booking.hotel.name }}</h2>
+                                <p class="hotel-meta">Room {{ booking.room.room_number }}</p>
+                            </div>
+                        </div>
+                        <span class="booking-status booking-status--{{ booking.payment_status|lower }}">{{ booking.payment_status }}</span>
                     </div>
-                </div>
+                    <div class="booking-card-body">
+                        <div class="booking-line">
+                            <span class="label">Check-in</span>
+                            <span class="value">{{ booking.check_in|date:"M d, Y" }}</span>
+                        </div>
+                        <div class="booking-line">
+                            <span class="label">Check-out</span>
+                            <span class="value">{{ booking.check_out|date:"M d, Y" }}</span>
+                        </div>
+                        <div class="booking-line">
+                            <span class="label">Duration</span>
+                            <span class="value">{{ booking.total_days }} night{{ booking.total_days|pluralize }}</span>
+                        </div>
+                        <div class="booking-line booking-total">
+                            <span class="label">Total Amount</span>
+                            <span class="value">NPR {{ booking.total_price }}</span>
+                        </div>
+                    </div>
+                </article>
             </div>
             {% endfor %}
         </div>
+        {% else %}
+        <div class="bookings-empty">
+            <i class="fas fa-bed"></i>
+            <h3>No bookings yet</h3>
+            <p>Your future trips will appear here after you reserve a room. Start exploring available stays now.</p>
+            <a href="{% url 'hotel:rooms' %}" class="btn btn-browse">
+                <i class="fas fa-compass me-1"></i> Browse Rooms
+            </a>
+        </div>
+        {% endif %}
     </div>
-</main>
+</section>
 {% endblock %}

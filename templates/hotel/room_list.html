@@ -249,7 +249,12 @@
                         <div>
                             <span class="room-price">NPR {{ room.price }}</span>
                         </div>
+                        <a href="{% url 'hotel:hotel_detail' room.hotel.id %}" class="btn btn-outline-primary">Details & Reviews</a>
+                        {% if request.user.is_authenticated and request.user.role == 'agent' %}
+                        <span class="btn btn-outline-secondary disabled">Agents cannot book</span>
+                        {% else %}
                         <a href="{% url 'hotel:book_room' room.id %}" class="btn btn-primary">Book Now</a>
+                        {% endif %}
                     </div>
                 </div>
             </article>
@@ -293,7 +298,12 @@
                         <p class="room-card-subtitle">${room.room_type}</p>
                         <div class="mt-auto room-card-footer">
                             <div><span class="room-price">NPR ${room.price}</span></div>
+                            <a href="/hotels/${room.hotel_id}/" class="btn btn-outline-primary">Details & Reviews</a>
+                            {% if request.user.is_authenticated and request.user.role == 'agent' %}
+                            <span class="btn btn-outline-secondary disabled">Agents cannot book</span>
+                            {% else %}
                             <a href="/rooms/book/${room.id}/" class="btn btn-primary">Book Now</a>
+                            {% endif %}
                         </div>
                     </div>
                 </article>

@@ -13,7 +13,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- Modern CSS -->
     <link rel="stylesheet" href="{% static 'css/modern.css' %}">
@@ -21,69 +21,7 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm py-3">
-        <div class="container">
-            <a class="navbar-brand text-primary fw-bold" href="{% url 'hotel:index' %}">
-                <i class="bi bi-building-fill"></i> Nepstay
-            </a>
-            
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'hotel:index' %}">
-                            <i class="bi bi-house"></i> Home
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'hotel:hotel_list' %}">
-                            <i class="bi bi-shop"></i> Hotels
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'hotel:rooms' %}">
-                            <i class="bi bi-door-closed"></i> Rooms
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'hotel:about' %}">
-                            <i class="bi bi-info-circle"></i> About
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'hotel:contact' %}">
-                            <i class="bi bi-envelope"></i> Contact
-                        </a>
-                    </li>
-                    {% if request.user.is_authenticated %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-person-circle"></i> {{ request.user.username }}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                            {% if request.user.role == 'agent' %}
-                            <li><a class="dropdown-item" href="{% url 'userauths:agent_dashboard' %}">Dashboard</a></li>
-                            {% endif %}
-                            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#profileModal">Profile</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-danger" href="{% url 'userauths:logout' %}">Logout</a></li>
-                        </ul>
-                    </li>
-                    {% else %}
-                    <li class="nav-item">
-                        <a class="btn btn-signin ms-2" href="{% url 'userauths:login' %}">
-                            <i class="bi bi-box-arrow-in-right"></i> Sign In
-                        </a>
-                    </li>
-                    {% endif %}
-                </ul>
-            </div>
-        </div>
-    </nav>
+    {% include 'partials/navbar.html' %}
 
     <!-- Messages -->
     {% if messages %}
@@ -103,104 +41,11 @@
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Footer -->
-    <footer>
-        <div class="container">
-            <div class="row">
-                <div class="col-md-3 footer-section">
-                    <h5 class="footer-title">Nepstay</h5>
-                    <p>Your trusted platform for finding premium hotel accommodations worldwide.</p>
-                </div>
-                <div class="col-md-3 footer-section">
-                    <h5 class="footer-title">Quick Links</h5>
-                    <ul class="footer-links">
-                        <li><a href="{% url 'hotel:index' %}">Home</a></li>
-                        <li><a href="{% url 'hotel:hotel_list' %}">Browse Hotels</a></li>
-                        <li><a href="{% url 'hotel:about' %}">About Us</a></li>
-                        <li><a href="{% url 'hotel:contact' %}">Contact</a></li>
-                    </ul>
-                </div>
-                <div class="col-md-3 footer-section">
-                    <h5 class="footer-title">Support</h5>
-                    <ul class="footer-links">
-                        <li><a href="#">Help Center</a></li>
-                        <li><a href="#">Booking Status</a></li>
-                        <li><a href="#">FAQs</a></li>
-                        <li><a href="#">Contact Support</a></li>
-                    </ul>
-                </div>
-                <div class="col-md-3 footer-section">
-                    <h5 class="footer-title">Follow Us</h5>
-                    <div class="d-flex gap-2">
-                        <a href="#" class="btn btn-sm btn-outline-light"><i class="bi bi-facebook"></i></a>
-                        <a href="#" class="btn btn-sm btn-outline-light"><i class="bi bi-twitter"></i></a>
-                        <a href="#" class="btn btn-sm btn-outline-light"><i class="bi bi-instagram"></i></a>
-                        <a href="#" class="btn btn-sm btn-outline-light"><i class="bi bi-linkedin"></i></a>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="footer-bottom">
-                <p>&copy; 2026 Nepstay. All rights reserved. | <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a></p>
-            </div>
-        </div>
-    </footer>
+    {% include 'partials/footer.html' %}
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    {% if request.user.is_authenticated %}
-    <div class="modal fade" id="profileModal" tabindex="-1" aria-labelledby="profileModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-sm">
-            <div class="modal-content border-0 shadow-lg">
-                <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title" id="profileModalLabel">My Profile</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body py-0">
-                    <div class="text-center py-4">
-                        <div class="mx-auto mb-3" style="width: 86px; height: 86px; border-radius: 50%; background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 2rem;">
-                            <i class="bi bi-person-fill"></i>
-                        </div>
-                        <h5 class="mb-1">{{ request.user.username }}</h5>
-                        <p class="text-secondary mb-1">{{ request.user.email }}</p>
-                        <p class="text-muted small">Member since {{ request.user.date_joined|date:'F Y' }}</p>
-                    </div>
-                    <div class="list-group list-group-flush">
-                        {% if request.user.full_name %}
-                        <div class="list-group-item bg-transparent">
-                            <strong>Full name:</strong>
-                            <div class="text-secondary">{{ request.user.full_name }}</div>
-                        </div>
-                        {% endif %}
-                        {% if request.user.phone %}
-                        <div class="list-group-item bg-transparent">
-                            <strong>Phone:</strong>
-                            <div class="text-secondary">{{ request.user.phone }}</div>
-                        </div>
-                        {% endif %}
-                        {% if request.user.profile and request.user.profile.gender %}
-                        <div class="list-group-item bg-transparent">
-                            <strong>Gender:</strong>
-                            <div class="text-secondary">{{ request.user.profile.gender }}</div>
-                        </div>
-                        {% endif %}
-                        {% if request.user.profile and request.user.profile.country %}
-                        <div class="list-group-item bg-transparent">
-                            <strong>Country:</strong>
-                            <div class="text-secondary">{{ request.user.profile.country }}</div>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="modal-footer border-0 pt-0">
-                    <button type="button" class="btn btn-outline-secondary w-100" data-bs-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
-    
     {% block extra_js %}{% endblock %}
 </body>
 </html>

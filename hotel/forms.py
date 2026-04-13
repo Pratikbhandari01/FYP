@@ -1,6 +1,6 @@
 from django import forms
 
-from hotel.models import Hotel, Room, RoomType
+from hotel.models import Hotel, Review, Room, RoomType
 
 
 class ContactForm(forms.Form):
@@ -89,3 +89,19 @@ class HotelSearchForm(forms.Form):
             }
         ),
     )
+
+
+class ReviewForm(forms.ModelForm):
+    class Meta:
+        model = Review
+        fields = ['rating', 'comment']
+        widgets = {
+            'rating': forms.Select(attrs={'class': 'form-select'}),
+            'comment': forms.Textarea(
+                attrs={
+                    'class': 'form-control',
+                    'rows': 4,
+                    'placeholder': 'Share your experience with this hotel...',
+                }
+            ),
+        }

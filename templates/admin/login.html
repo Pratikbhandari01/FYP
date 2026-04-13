@@ -1,0 +1,54 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block bodyclass %}login{% endblock %}
+
+{% block content %}
+<main class="control-login">
+    <section class="control-login-panel" aria-label="Admin login form">
+        <div class="control-branding">
+            <p class="control-kicker">Travi management</p>
+            <h1>Admin control room</h1>
+            <p>Secure sign in for platform operations.</p>
+        </div>
+
+        {% if form.errors and not form.non_field_errors %}
+            <div class="control-alert" role="alert">
+                {% if form.errors.items|length == 1 %}
+                    {% translate "Please correct the error below." %}
+                {% else %}
+                    {% translate "Please correct the errors below." %}
+                {% endif %}
+            </div>
+        {% endif %}
+
+        {% if form.non_field_errors %}
+            <div class="control-alert" role="alert">
+                {% for error in form.non_field_errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <form action="{{ app_path }}" method="post" id="login-form" class="control-form" novalidate>
+            {% csrf_token %}
+
+            <label for="id_username">Email or username</label>
+            <input type="text" name="username" id="id_username" value="{{ form.username.value|default_if_none:'' }}" autocomplete="username" required>
+
+            <label for="id_password">Password</label>
+            <input type="password" name="password" id="id_password" autocomplete="current-password" required>
+
+            {% url 'admin_password_reset' as password_reset_url %}
+            {% if password_reset_url %}
+                <div class="control-links">
+                    <a href="{{ password_reset_url }}">{% translate 'Forgotten your password?' %}</a>
+                </div>
+            {% endif %}
+
+            <button type="submit">{% translate 'Sign in' %}</button>
+            <input type="hidden" name="next" value="{{ next }}">
+        </form>
+    </section>
+</main>
+{% endblock %}

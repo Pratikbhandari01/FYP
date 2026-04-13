@@ -58,6 +58,13 @@ class Hotel(models.Model):
             return mark_safe(f'<img src="{self.image.url}" width="50px" height="50px" style="object-fit: cover;border-radius: 5px;" />')
         return "No Image"
 
+    def average_rating(self):
+        aggregate = self.reviews.aggregate(avg=models.Avg('rating'))
+        return round(aggregate.get('avg') or 0, 1)
+
+    def reviews_count(self):
+        return self.reviews.count()
+
 
 
 
@@ -151,10 +158,12 @@ class Booking(models.Model):
     booking_id = ShortUUIDField(length=8, unique=True, blank=True)
 
     def __str__(self):
-        return f"Booking by {self.user.username} for {self.hotel.name} - Room {self.room.room_number}"
+        customer_name = self.customer.username if self.customer else (self.full_name or self.email)
+        return f"Booking by {customer_name} for {self.hotel.name} - Room {self.room.room_number}"
     
     def rooms(self):
-        return self.room.all().count()
+        # Booking links to exactly one room via ForeignKey.
+        return 1 if self.room_id else 0
     class Meta:
         verbose_name_plural = "Bookings"
 
@@ -185,6 +194,36 @@ class ContactMessage(models.Model):
 
     def __str__(self):
         return f'{self.name} - {self.subject or "No subject"}'
+
+
+class Review(models.Model):
+    STAR_CHOICES = (
+        (1, '1 Star'),
+        (2, '2 Stars'),
+        (3, '3 Stars'),
+        (4, '4 Stars'),
+        (5, '5 Stars'),
+    )
+
+    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='reviews')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews')
+    agent = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='reviews_received', blank=True, null=True)
+    rating = models.PositiveSmallIntegerField(choices=STAR_CHOICES)
+    comment = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        unique_together = ('hotel', 'user')
+
+    def save(self, *args, **kwargs):
+        if self.hotel_id:
+            self.agent = self.hotel.agent
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f'{self.user.username} - {self.hotel.name} ({self.rating}/5)'
 
 
 

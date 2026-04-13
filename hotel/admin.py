@@ -2,7 +2,7 @@ from django.contrib import admin
 from django import forms
 from django.urls import reverse
 from django.utils.html import format_html
-from .models import Booking, ContactMessage, Hotel, RoomType, Room
+from .models import Booking, ContactMessage, Hotel, Review, RoomType, Room
 
 
 
@@ -100,7 +100,7 @@ class HotelAdmin(admin.ModelAdmin):
     readonly_fields = ['created_at']
     fieldsets = (
         (None, {
-            'fields': ('user', 'name', 'location', 'address', 'mobile', 'email', 'description', 'image', 'status', 'featured', 'slug', 'created_at')
+            'fields': ('agent', 'name', 'location', 'address', 'mobile', 'email', 'description', 'image', 'status', 'featured', 'slug', 'created_at')
         }),
     )
 
@@ -231,6 +231,15 @@ class ContactMessageAdmin(admin.ModelAdmin):
     readonly_fields = ['created_at']
     ordering = ['-created_at']
     list_editable = ['is_read']
+
+
+@admin.register(Review)
+class ReviewAdmin(admin.ModelAdmin):
+    list_display = ['hotel', 'agent', 'user', 'rating', 'created_at', 'updated_at']
+    list_filter = ['rating', 'created_at']
+    search_fields = ['hotel__name', 'user__username', 'comment']
+    readonly_fields = ['created_at', 'updated_at']
+    ordering = ['-created_at']
 
 
 

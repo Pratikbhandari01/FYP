@@ -1,83 +1,33 @@
 {% extends "admin/base.html" %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}Nepstay Admin - {{ block.super }}{% endblock %}
+{% block title %}{{ block.super }}{% endblock %}
 
 {% block extrahead %}
+    {{ block.super }}
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="{% static 'css/admin_custom.css' %}">
-    <style>
-        :root {
-            --primary: #667eea;
-            --secondary: #764ba2;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-        }
-        
-        #header {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%) !important;
-            color: white !important;
-        }
-        
-        #header h1 {
-            color: white !important;
-            font-weight: 700;
-        }
-        
-        #header a {
-            color: rgba(255, 255, 255, 0.9);
-        }
-        
-        #header a:hover {
-            color: white;
-        }
-        
-        .admin-module {
-            border-radius: 0.75rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        
-        .admin-module:hover {
-            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.15);
-            transform: translateY(-2px);
-        }
-        
-        .deletelink {
-            color: var(--danger);
-        }
-        
-        .addlink {
-            color: var(--primary);
-        }
-        
-        form button[type="submit"] {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-            color: white;
-            border: none;
-            border-radius: 0.5rem;
-            padding: 0.5rem 1.5rem;
-        }
-        
-        form button[type="submit"]:hover {
-            opacity: 0.9;
-        }
-        
-        table {
-            border-radius: 0.75rem;
-            overflow: hidden;
-        }
-        
-        table thead {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%) !important;
-            color: white !important;
-        }
-    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/admin_portal.css' %}">
 {% endblock %}
 
 {% block branding %}
-<h1 id="site-name"><a href="{% url 'admin:index' %}">
-    Nepstay Admin
-</a></h1>
+<h1 id="site-name"><a href="{% url 'admin:index' %}">Nepstay.com Dashboard</a></h1>
+{% endblock %}
+
+{% block welcome-msg %}
+    {% translate 'Welcome,' %}
+    <strong>{% firstof user.get_short_name user.get_username %}</strong>
+{% endblock %}
+
+{% block breadcrumbs %}
+    {{ block.super }}
+    <nav class="portal-topnav" aria-label="Admin quick navigation">
+        <a href="{% url 'admin:index' %}">Dashboard</a>
+        <a href="{% url 'admin:hotel_hotel_changelist' %}">Hotels</a>
+        <a href="{% url 'admin:hotel_room_changelist' %}">Rooms</a>
+        <a href="{% url 'admin:hotel_booking_changelist' %}">Bookings</a>
+        <a href="{% url 'admin:userauths_user_changelist' %}">Users</a>
+    </nav>
 {% endblock %}

@@ -4,375 +4,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign In | Nepstay</title>
-
+    <title>Login | Nepstay</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'css/modern.css' %}">
-
-    <style>
-        :root {
-            --auth-deep: #0f3d59;
-            --auth-ocean: #1d6f87;
-            --auth-mint: #28a8a1;
-            --auth-peach: #ffd6a5;
-            --auth-paper: #fbfdff;
-            --auth-text: #10263a;
-            --auth-muted: #5e7385;
-            --auth-border: #cde0eb;
-        }
-
-        body {
-            min-height: 100vh;
-            margin: 0;
-            font-family: 'Manrope', sans-serif;
-            color: var(--auth-text);
-            background:
-                radial-gradient(circle at 18% 16%, rgba(40, 168, 161, 0.26), transparent 36%),
-                radial-gradient(circle at 82% 86%, rgba(255, 214, 165, 0.34), transparent 32%),
-                linear-gradient(140deg, #e8f4fb 0%, #edf7f2 54%, #fef8ef 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1.4rem;
-            overflow-x: hidden;
-        }
-
-        .auth-layout {
-            width: min(1040px, 100%);
-            min-height: 680px;
-            display: grid;
-            grid-template-columns: 1.1fr 1fr;
-            border-radius: 1.6rem;
-            border: 1px solid rgba(12, 58, 87, 0.12);
-            box-shadow: 0 30px 74px rgba(16, 57, 79, 0.2);
-            overflow: hidden;
-            background: #fff;
-            animation: authEnter .6s ease;
-        }
-
-        .brand-panel {
-            position: relative;
-            padding: 2.4rem;
-            background: linear-gradient(165deg, rgba(15, 61, 89, 0.98) 0%, rgba(29, 111, 135, 0.96) 64%, rgba(40, 168, 161, 0.94) 100%);
-            color: #f3fbff;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .brand-panel::after {
-            content: "";
-            position: absolute;
-            inset: auto -20% -24% auto;
-            width: 270px;
-            height: 270px;
-            border-radius: 50%;
-            background: rgba(255, 214, 165, 0.2);
-            filter: blur(1px);
-        }
-
-        .brand-logo {
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.45rem;
-            letter-spacing: 0.03em;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-weight: 700;
-            z-index: 2;
-        }
-
-        .brand-copy {
-            position: relative;
-            z-index: 2;
-        }
-
-        .brand-copy h1 {
-            font-family: 'Outfit', sans-serif;
-            font-size: clamp(2rem, 4vw, 2.9rem);
-            line-height: 1.1;
-            margin: 0.5rem 0 0.8rem;
-        }
-
-        .brand-copy p {
-            max-width: 34ch;
-            color: rgba(234, 247, 255, 0.88);
-            margin: 0;
-        }
-
-        .brand-points {
-            display: grid;
-            gap: 0.7rem;
-            margin-top: 1.6rem;
-        }
-
-        .brand-point {
-            display: flex;
-            align-items: center;
-            gap: 0.55rem;
-            font-size: 0.95rem;
-        }
-
-        .brand-point i {
-            color: var(--auth-peach);
-        }
-
-        .brand-footnote {
-            z-index: 2;
-            font-size: 0.86rem;
-            opacity: 0.78;
-        }
-
-        .form-panel {
-            background: var(--auth-paper);
-            padding: 2.2rem 2rem;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .form-header h2 {
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.75rem;
-            margin-bottom: 0.35rem;
-        }
-
-        .form-header p {
-            margin: 0;
-            color: var(--auth-muted);
-        }
-
-        .auth-form {
-            margin-top: 1.35rem;
-        }
-
-        .input-label {
-            font-weight: 700;
-            font-size: 0.9rem;
-            margin-bottom: 0.4rem;
-            color: #1c3a4c;
-        }
-
-        .field-wrap {
-            position: relative;
-            margin-bottom: 1rem;
-        }
-
-        .field-icon {
-            position: absolute;
-            left: 0.9rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #4f6e83;
-            font-size: 0.95rem;
-        }
-
-        .auth-input {
-            width: 100%;
-            border: 1px solid var(--auth-border);
-            border-radius: 0.85rem;
-            background: #fff;
-            padding: 0.8rem 2.6rem 0.8rem 2.5rem;
-            transition: border-color .2s ease, box-shadow .2s ease;
-            font-size: 0.95rem;
-        }
-
-        .auth-input:focus {
-            outline: none;
-            border-color: #1d8f8a;
-            box-shadow: 0 0 0 0.2rem rgba(29, 143, 138, 0.18);
-        }
-
-        .toggle-password {
-            position: absolute;
-            right: 0.75rem;
-            top: 50%;
-            transform: translateY(-50%);
-            border: none;
-            background: transparent;
-            color: #4f6e83;
-            padding: 0.25rem;
-        }
-
-        .btn-submit {
-            width: 100%;
-            margin-top: 0.4rem;
-            border: none;
-            border-radius: 0.85rem;
-            padding: 0.85rem 1rem;
-            color: #fff;
-            font-weight: 700;
-            background: linear-gradient(135deg, #0f6d66 0%, #1b9f98 100%);
-            box-shadow: 0 14px 24px rgba(21, 132, 127, 0.24);
-            transition: transform .25s ease, box-shadow .25s ease;
-        }
-
-        .btn-submit:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 18px 30px rgba(21, 132, 127, 0.34);
-            color: #fff;
-        }
-
-        .auth-footer {
-            margin-top: 1rem;
-            text-align: center;
-            color: var(--auth-muted);
-            font-size: 0.92rem;
-        }
-
-        .auth-footer a {
-            color: #0f6d66;
-            font-weight: 700;
-            text-decoration: none;
-        }
-
-        .auth-footer a:hover {
-            text-decoration: underline;
-        }
-
-        .alert {
-            border-radius: 0.8rem;
-            border: none;
-            margin-top: 1rem;
-            margin-bottom: 0;
-            font-size: 0.92rem;
-        }
-
-        @keyframes authEnter {
-            from {
-                opacity: 0;
-                transform: translateY(14px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @media (max-width: 991px) {
-            .auth-layout {
-                grid-template-columns: 1fr;
-                min-height: auto;
-            }
-
-            .brand-panel {
-                padding: 1.6rem;
-            }
-
-            .brand-copy p {
-                max-width: none;
-            }
-        }
-
-        @media (max-width: 520px) {
-            body {
-                padding: 0.9rem;
-            }
-
-            .form-panel {
-                padding: 1.35rem 1.1rem;
-            }
-
-            .brand-panel {
-                padding: 1.3rem 1.1rem;
-            }
-        }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/auth-clean.css' %}">
 </head>
-<body>
-    <div class="auth-layout">
-        <section class="brand-panel">
-            <div>
-                <span class="brand-logo"><i class="bi bi-buildings-fill"></i> Nepstay</span>
-            </div>
-            <div class="brand-copy">
-                <h1>Welcome back to smarter hotel booking.</h1>
-                <p>Access your dashboard, manage reservations, and discover handpicked stays in seconds.</p>
-                <div class="brand-points">
-                    <div class="brand-point"><i class="bi bi-check-circle-fill"></i> Secure account authentication</div>
-                    <div class="brand-point"><i class="bi bi-check-circle-fill"></i> One-click access to your bookings</div>
-                    <div class="brand-point"><i class="bi bi-check-circle-fill"></i> Agent and traveler friendly tools</div>
-                </div>
-            </div>
-            <div class="brand-footnote">Trusted by travelers and hotel agents across Nepal.</div>
-        </section>
+<body class="auth-page">
+    <div class="auth-card" role="main">
+        <h1 class="auth-title">Login</h1>
 
-        <section class="form-panel">
-            <div class="form-header">
-                <h2>Sign in to your account</h2>
-                <p>Continue your journey with Nepstay.</p>
-            </div>
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
 
-            {% if messages %}
-                {% for message in messages %}
-                <div class="alert alert-{{ message.tags }}">
-                    {{ message }}
-                </div>
-                {% endfor %}
-            {% endif %}
+        <form method="POST" action="{% url 'userauths:login' %}" novalidate>
+            {% csrf_token %}
 
-            <form method="POST" class="auth-form">
-                {% csrf_token %}
-
-                <label class="input-label" for="username">Email or Username</label>
-                <div class="field-wrap">
-                    <i class="bi bi-person field-icon"></i>
+            <div class="auth-field">
+                <div class="auth-input-wrap">
+                    <i class="bi bi-person-fill auth-icon" aria-hidden="true"></i>
                     <input
                         type="text"
                         id="username"
                         name="username"
                         class="auth-input"
-                        placeholder="Enter your email or username"
-                        required
+                        placeholder="Your Name"
                         autocomplete="username"
+                        required
                     >
                 </div>
+            </div>
 
-                <label class="input-label" for="password">Password</label>
-                <div class="field-wrap">
-                    <i class="bi bi-lock field-icon"></i>
+            <div class="auth-field">
+                <div class="auth-input-wrap">
+                    <i class="bi bi-lock-fill auth-icon" aria-hidden="true"></i>
                     <input
                         type="password"
                         id="password"
                         name="password"
                         class="auth-input"
-                        placeholder="Enter your password"
-                        required
+                        placeholder="Password"
                         autocomplete="current-password"
+                        required
                     >
-                    <button type="button" class="toggle-password" id="togglePassword" aria-label="Show password">
+                    <button type="button" class="auth-toggle" id="togglePassword" aria-label="Show password">
                         <i class="bi bi-eye"></i>
                     </button>
                 </div>
-
-                <button type="submit" class="btn-submit">
-                    <i class="bi bi-box-arrow-in-right"></i> Sign In
-                </button>
-            </form>
-
-            <div class="auth-footer">
-                <p>New to Nepstay? <a href="{% url 'userauths:register' %}">Create your account</a></p>
             </div>
-        </section>
+
+            <label class="auth-meta" for="remember_me">
+                <input type="checkbox" id="remember_me" name="remember_me" value="1">
+                <span>Remember me</span>
+            </label>
+
+            <button type="submit" class="auth-btn">Log in</button>
+        </form>
+
+        <div class="auth-link-row">
+            No account yet?
+            <a href="{% url 'userauths:register' %}">Create one</a>
+        </div>
     </div>
+    
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var toggle = document.getElementById('togglePassword');
             var password = document.getElementById('password');
 
-            if (toggle && password) {
-                toggle.addEventListener('click', function () {
-                    var isPassword = password.getAttribute('type') === 'password';
-                    password.setAttribute('type', isPassword ? 'text' : 'password');
-                    toggle.innerHTML = isPassword ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
-                });
+            if (!toggle || !password) {
+                return;
             }
+
+            toggle.addEventListener('click', function () {
+                var isPassword = password.getAttribute('type') === 'password';
+                password.setAttribute('type', isPassword ? 'text' : 'password');
+                toggle.innerHTML = isPassword ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
+            });
         });
     </script>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

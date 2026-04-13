@@ -4,285 +4,434 @@
 {% block title %}Nepstay - Find Your Perfect Stay{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
 <style>
-    .hero-bg {
-        min-height: 88vh;
-        background-image: url('/media/images/image.png');
+    .home-shell {
+        padding: 1.1rem 0 2.8rem;
+    }
+
+    .hero-card {
+        position: relative;
+        min-height: 330px;
+        border-radius: 1.3rem;
+        overflow: hidden;
+        box-shadow: 0 24px 58px rgba(15, 23, 42, 0.2);
+        text-align: center;
+        color: #ffffff;
+        padding: 0;
+    }
+
+    .hero-slider {
+        min-height: 330px;
+    }
+
+    .hero-slide {
+        min-height: 330px;
         background-size: cover;
         background-position: center;
-        position: relative;
-        display: flex;
-        align-items: center;
+        background-repeat: no-repeat;
     }
-    .hero-bg::before {
-        content: '';
+
+    .hero-overlay-content {
         position: absolute;
         inset: 0;
-        background: rgba(15, 23, 42, 0.55);
-        background: linear-gradient(135deg, rgba(57, 84, 255, 0.75), rgba(120, 70, 198, 0.7));
-        mix-blend-mode: multiply;
+        display: grid;
+        place-items: center;
+        z-index: 3;
+        padding: 2.4rem 1rem 5.3rem;
+        pointer-events: none;
     }
-    .hero-content {
-        position: relative;
-        z-index: 1;
-        color: #fff;
-        padding: 5rem 0;
+
+    .hero-overlay-content > div {
+        max-width: 780px;
     }
-    .hero-content h1 {
-        font-size: clamp(2.8rem, 4vw, 4.5rem);
-        font-weight: 800;
-        letter-spacing: -0.05em;
-    }
-    .hero-content p {
-        font-size: 1.1rem;
-        color: rgba(255,255,255,0.88);
-        max-width: 700px;
-        margin: 0 auto;
-    }
-    .hero-search {
-        background: rgba(255,255,255,0.96);
-        border-radius: 1rem;
-        box-shadow: 0 25px 70px rgba(15, 23, 42, 0.18);
-        padding: 1rem;
-        margin-top: 2rem;
-    }
-    .hero-search .form-control {
-        border-radius: 1rem;
-        height: 3.7rem;
-        border: 1px solid rgba(15, 23, 42, 0.15);
-    }
-    .hero-search .btn {
-        border-radius: 1rem;
-        min-width: 160px;
-    }
-    .section-title {
-        font-size: 2.35rem;
-        font-weight: 700;
-        margin-bottom: 0.5rem;
-    }
-    .section-subtitle {
-        color: #6b7280;
-        margin-bottom: 2rem;
-    }
-    .room-card {
-        background: #fff;
-        border-radius: 1.4rem;
-        overflow: hidden;
-        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
-        transition: transform 0.25s ease, box-shadow 0.25s ease;
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-    }
-    .room-card:hover {
-        transform: translateY(-6px);
-        box-shadow: 0 36px 80px rgba(15, 23, 42, 0.12);
-    }
-    .room-image {
-        height: 240px;
-        width: 100%;
-        object-fit: cover;
-    }
-    .room-image-placeholder {
-        height: 240px;
-        width: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #e0e7ff;
-        color: #4338ca;
-    }
-    .room-info {
-        padding: 1.6rem;
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-    }
-    .room-title {
-        font-size: 1.25rem;
-        font-weight: 700;
-        margin-bottom: 0.25rem;
-    }
-    .room-meta {
-        font-size: 0.95rem;
-        color: #4b5563;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    .room-description {
-        color: #6b7280;
-        flex-grow: 1;
-    }
-    .room-card .btn {
-        align-self: flex-start;
-    }
-    .feature-card {
-        border-radius: 1.25rem;
-        padding: 2rem;
-        background: #f8fafc;
-        transition: transform 0.25s ease, background 0.25s ease;
-        height: 100%;
-    }
-    .feature-card:hover {
-        transform: translateY(-5px);
-        background: #eef2ff;
-    }
-    .feature-icon {
-        width: 64px;
-        height: 64px;
+
+    .hero-slider-nav {
+        width: 44px;
+        height: 44px;
+        border: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+        backdrop-filter: blur(8px);
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 5;
+        transition: background 0.2s ease;
+    }
+
+    .hero-slider-nav:hover {
+        background: rgba(255, 255, 255, 0.35);
+    }
+
+    .hero-slider-prev {
+        left: 0.85rem;
+    }
+
+    .hero-slider-next {
+        right: 0.85rem;
+    }
+
+    .hero-slider-pagination {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 1rem;
+        z-index: 5;
+    }
+
+    .hero-slider-pagination .swiper-pagination-bullet {
+        background: rgba(255, 255, 255, 0.75);
+        opacity: 1;
+    }
+
+    .hero-slider-pagination .swiper-pagination-bullet-active {
+        background: #ffffff;
+    }
+
+    .hero-card h1 {
+        font-size: clamp(2rem, 4.2vw, 3.35rem);
+        margin-bottom: 0.5rem;
+    }
+
+    .hero-card p {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.88);
+    }
+
+    .search-ribbon {
+        margin-top: -2.3rem;
+        position: relative;
+        z-index: 3;
+    }
+
+    .search-ribbon form {
+        background: #ffffff;
+        border: 1px solid #dbe7f1;
+        border-radius: 999px;
+        box-shadow: 0 20px 48px rgba(15, 23, 42, 0.14);
+        padding: 0.45rem;
+    }
+
+    .search-ribbon .field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+        padding: 0.5rem 1rem;
+    }
+
+    .search-ribbon .field + .field {
+        border-left: 1px solid #e6edf5;
+    }
+
+    .search-ribbon .field label {
+        font-size: 0.76rem;
+        font-weight: 800;
+        color: #334155;
+        margin: 0;
+    }
+
+    .search-ribbon .field input,
+    .search-ribbon .field select {
+        border: 0;
+        padding: 0;
+        font-size: 0.9rem;
+        color: #64748b;
+        box-shadow: none;
+        background: transparent;
+    }
+
+    .search-ribbon .field input:focus,
+    .search-ribbon .field select:focus {
+        outline: none;
+        box-shadow: none;
+    }
+
+    .btn-search-round {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        border: 0;
+        background: linear-gradient(135deg, #1d4ed8, #2563eb);
+        color: #ffffff;
+        font-size: 1.25rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .home-block {
+        margin-top: 3.1rem;
+    }
+
+    .block-title {
+        font-size: 1.55rem;
+        margin-bottom: 1.1rem;
+    }
+
+    .destination-grid {
+        display: grid;
+        grid-template-columns: 1.1fr 1.2fr 1.1fr;
+        gap: 0.85rem;
+    }
+
+    .destination-card {
+        position: relative;
+        min-height: 260px;
+        border-radius: 1.1rem;
+        overflow: hidden;
+        box-shadow: 0 16px 34px rgba(15, 23, 42, 0.1);
+    }
+
+    .destination-card.small {
+        min-height: 125px;
+    }
+
+    .destination-card img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .destination-label {
+        position: absolute;
+        left: 0.75rem;
+        bottom: 0.7rem;
+        background: rgba(255, 255, 255, 0.78);
+        backdrop-filter: blur(8px);
+        border-radius: 999px;
+        padding: 0.28rem 0.7rem;
+        font-size: 0.85rem;
+        font-weight: 700;
+    }
+
+    .hotel-card {
         border-radius: 1rem;
-        background: rgba(99, 102, 241, 0.12);
-        color: #4338ca;
-        font-size: 1.6rem;
-        margin-bottom: 1.25rem;
+        border: 1px solid #d8e4ef;
+        background: #ffffff;
+        box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+        overflow: hidden;
+        height: 100%;
+        transition: transform .25s ease;
     }
-    .cta-section {
-        padding: 4rem 0;
+
+    .hotel-card:hover {
+        transform: translateY(-5px);
     }
-    .cta-section .btn {
-        min-width: 190px;
+
+    .hotel-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+    }
+
+    .hotel-content {
+        padding: 1rem;
+    }
+
+    .feature-panel {
+        border-radius: 1.1rem;
+        background: #ffffff;
+        border: 1px solid #d8e4ef;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.07);
+        padding: 1.2rem;
+        height: 100%;
+    }
+
+    .feature-panel .icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: #e0edff;
+        color: #1d4ed8;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 0.65rem;
+    }
+
+    .cta-band {
+        margin-top: 3rem;
+        border-radius: 1.1rem;
+        background: linear-gradient(120deg, #1d4ed8, #0f766e);
+        color: #fff;
+        padding: 2rem 1rem;
+        text-align: center;
+    }
+
+    @media (max-width: 992px) {
+        .destination-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .search-ribbon form {
+            border-radius: 1rem;
+        }
+
+        .search-ribbon .field + .field {
+            border-left: 0;
+            border-top: 1px solid #e6edf5;
+        }
     }
 </style>
 {% endblock extra_css %}
 
 {% block content %}
-
-<section class="hero hero-bg">
+<div class="home-shell">
     <div class="container">
-        <div class="hero-content text-center mx-auto" style="max-width: 850px;">
-            <p class="text-uppercase fw-semibold mb-3" style="letter-spacing: 0.24em; color: rgba(255,255,255,0.85);">Discover the best hotels</p>
-            <h1>Find your dream stay with Nepstay</h1>
-            <p class="mb-4">Search from curated hotels, book instantly, and enjoy premium stays with flexible cancellation and 24/7 support.</p>
+        <section class="hero-card">
+            <div class="hero-slider swiper" aria-label="Homepage image slider">
+                <div class="swiper-wrapper">
+                    <div class="swiper-slide hero-slide" style="background-image: linear-gradient(115deg, rgba(7, 28, 43, 0.7), rgba(20, 52, 73, 0.45)), url('https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1600&q=80');"></div>
+                    <div class="swiper-slide hero-slide" style="background-image: linear-gradient(115deg, rgba(7, 28, 43, 0.7), rgba(20, 52, 73, 0.45)), url('https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=1600&q=80');"></div>
+                    <div class="swiper-slide hero-slide" style="background-image: linear-gradient(115deg, rgba(7, 28, 43, 0.7), rgba(20, 52, 73, 0.45)), url('https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=1600&q=80');"></div>
+                </div>
 
-            <div class="hero-search mx-auto">
-                <form method="GET" action="{% url 'hotel:hotel_list' %}" class="row g-2 align-items-center">
-                    <div class="col-12 col-md-8">
-                        <input
-                            type="text"
-                            name="q"
-                            class="form-control form-control-lg"
-                            placeholder="Search by hotel name, city, or feature"
-                        >
+                <div class="hero-overlay-content">
+                    <div>
+                        <h1>Book your stay with NepStay</h1>
+                        <p>Thousands of verified rooms are waiting for your next journey.</p>
                     </div>
-                    <div class="col-12 col-md-4 d-grid">
-                        <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="bi bi-search me-2"></i> Search Hotels
+                </div>
+
+                <button class="hero-slider-nav hero-slider-prev" type="button" aria-label="Previous slide">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <button class="hero-slider-nav hero-slider-next" type="button" aria-label="Next slide">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+                <div class="hero-slider-pagination"></div>
+            </div>
+        </section>
+
+        <div class="search-ribbon">
+            <form method="GET" action="{% url 'hotel:hotel_list' %}">
+                <div class="row g-0 align-items-center">
+                    <div class="col-lg-3 field">
+                        <label for="location">Location</label>
+                        <input id="location" type="text" name="q" placeholder="Where are you going?">
+                    </div>
+                    <div class="col-lg-3 field">
+                        <label for="checkin">Check-in</label>
+                        <input id="checkin" type="date" name="check_in">
+                    </div>
+                    <div class="col-lg-3 field">
+                        <label for="checkout">Check-out</label>
+                        <input id="checkout" type="date" name="check_out">
+                    </div>
+                    <div class="col-lg-2 field">
+                        <label for="guests">Guests</label>
+                        <select id="guests" name="guests">
+                            <option value="1">1 guest</option>
+                            <option value="2">2 guests</option>
+                            <option value="3">3 guests</option>
+                            <option value="4">4 guests</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-1 d-flex justify-content-center mt-3 mt-lg-0">
+                        <button type="submit" class="btn-search-round" aria-label="Search hotels">
+                            <i class="bi bi-arrow-right"></i>
                         </button>
                     </div>
-                </form>
+                </div>
+            </form>
+        </div>
+
+        <section class="home-block">
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                <h2 class="block-title mb-0">Featured hotels</h2>
+                <a href="{% url 'hotel:hotel_list' %}" class="btn btn-outline-primary rounded-pill px-3">View all hotels</a>
             </div>
-        </div>
-    </div>
-</section>
 
-<section class="section py-5 bg-light">
-    <div class="container">
-        <div class="text-center mb-5">
-            <h2 class="section-title">Featured Hotels</h2>
-            <p class="section-subtitle">Handpicked stays selected for comfort, style and value.</p>
-        </div>
-
-        <div class="row g-4">
-            {% for hotel in hotels %}
-            <div class="col-md-6 col-lg-4">
-                <div class="room-card">
+            <div class="row g-4">
+                {% for hotel in hotels %}
+                <div class="col-md-6 col-xl-4">
+                    <article class="hotel-card">
                     {% if hotel.image %}
-                        <img src="{{ hotel.image.url }}" alt="{{ hotel.name }}" class="room-image">
+                        <img src="{{ hotel.image.url }}" alt="{{ hotel.name }}" class="hotel-image">
                     {% else %}
-                        <div class="room-image-placeholder">
+                        <div class="hotel-image d-flex align-items-center justify-content-center" style="background: #e2e8f0; color: #64748b;">
                             <i class="bi bi-image"></i>
                         </div>
                     {% endif %}
-                    <div class="room-info">
+                    <div class="hotel-content">
                         <div>
-                            <h3 class="room-title">{{ hotel.name }}</h3>
-                            <div class="room-meta">
+                            <h3 class="h5 mb-1">{{ hotel.name }}</h3>
+                            <div class="text-muted small d-flex align-items-center gap-1">
                                 <i class="bi bi-geo-alt"></i>
                                 <span>{{ hotel.location }}</span>
                             </div>
                         </div>
-                        <p class="room-description">{{ hotel.description|truncatewords:22 }}</p>
-                        <div class="d-flex flex-wrap align-items-center gap-2 mt-3">
+                        <p class="text-muted mt-2 mb-3">{{ hotel.description|truncatewords:18 }}</p>
+                        <div class="d-flex align-items-center gap-2 mb-3">
                             <span class="badge bg-primary bg-opacity-10 text-primary">{{ hotel.status|title }}</span>
                             {% if hotel.featured %}
                             <span class="badge bg-secondary bg-opacity-10 text-secondary">Featured</span>
                             {% endif %}
                         </div>
-                        <a href="{% url 'hotel:hotel_list' %}" class="btn btn-outline-primary mt-3">View Rooms</a>
+                        <a href="{% url 'hotel:rooms' %}?hotel={{ hotel.id }}" class="btn btn-primary w-100">View Rooms</a>
                     </div>
+                    </article>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-info mb-0">No hotels available right now. Please check back later.</div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="home-block">
+            <h2 class="block-title">Why NepStay</h2>
+            <div class="row g-3">
+                <div class="col-md-6 col-xl-3">
+                    <article class="feature-panel">
+                        <span class="icon"><i class="bi bi-shield-lock"></i></span>
+                        <h3 class="h6">Secure Booking</h3>
+                        <p class="text-muted mb-0">Safe payments and trusted hotel partners.</p>
+                    </article>
+                </div>
+                <div class="col-md-6 col-xl-3">
+                    <article class="feature-panel">
+                        <span class="icon"><i class="bi bi-tags"></i></span>
+                        <h3 class="h6">Best Value</h3>
+                        <p class="text-muted mb-0">Competitive prices with useful offers.</p>
+                    </article>
+                </div>
+                <div class="col-md-6 col-xl-3">
+                    <article class="feature-panel">
+                        <span class="icon"><i class="bi bi-lightning-charge-fill"></i></span>
+                        <h3 class="h6">Fast Checkout</h3>
+                        <p class="text-muted mb-0">Simple booking flow in a few clicks.</p>
+                    </article>
+                </div>
+                <div class="col-md-6 col-xl-3">
+                    <article class="feature-panel">
+                        <span class="icon"><i class="bi bi-headset"></i></span>
+                        <h3 class="h6">24/7 Support</h3>
+                        <p class="text-muted mb-0">Help available whenever you need it.</p>
+                    </article>
                 </div>
             </div>
-            {% empty %}
-            <div class="col-12 text-center py-5">
-                <i class="bi bi-inbox" style="font-size: 3rem; color: #9ca3af;"></i>
-                <p class="text-muted mt-3">No hotels available right now. Please check back later.</p>
+        </section>
+
+        <section class="cta-band">
+            <h2 class="mb-2">Ready for your next trip?</h2>
+            <p class="mb-3 text-white-50">Compare hotels, check rooms, and book confidently with NepStay.</p>
+            <div class="d-flex justify-content-center gap-2 flex-wrap">
+                <a href="{% url 'hotel:hotel_list' %}" class="btn btn-light">Browse Hotels</a>
+                <a href="{% url 'hotel:contact' %}" class="btn btn-outline-light">Contact Support</a>
             </div>
-            {% endfor %}
-        </div>
+        </section>
     </div>
-</section>
-
-<section class="section py-5">
-    <div class="container">
-        <div class="text-center mb-5">
-            <h2 class="section-title">Why Nepstay?</h2>
-            <p class="section-subtitle">Everything you need for a smooth, memorable booking experience.</p>
-        </div>
-
-        <div class="row g-4">
-            <div class="col-md-6 col-lg-3">
-                <div class="feature-card text-center">
-                    <div class="feature-icon">
-                        <i class="bi bi-shield-lock"></i>
-                    </div>
-                    <h5 class="fw-bold">Secure Booking</h5>
-                    <p class="mb-0 text-muted">Safe payments and trusted hotel partners across every destination.</p>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-3">
-                <div class="feature-card text-center">
-                    <div class="feature-icon">
-                        <i class="bi bi-tags"></i>
-                    </div>
-                    <h5 class="fw-bold">Best Value</h5>
-                    <p class="mb-0 text-muted">Competitive prices with special offers and exclusive packages.</p>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-3">
-                <div class="feature-card text-center">
-                    <div class="feature-icon">
-                        <i class="bi bi-lightning-charge-fill"></i>
-                    </div>
-                    <h5 class="fw-bold">Fast Checkout</h5>
-                    <p class="mb-0 text-muted">Quick reservation flow so you can book in just a few clicks.</p>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-3">
-                <div class="feature-card text-center">
-                    <div class="feature-icon">
-                        <i class="bi bi-headset"></i>
-                    </div>
-                    <h5 class="fw-bold">24/7 Support</h5>
-                    <p class="mb-0 text-muted">Friendly customer service available anytime you need help.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="section cta-section" style="background: linear-gradient(135deg, #4338ca 0%, #8b5cf6 100%); color: #fff;">
-    <div class="container text-center">
-        <h2 class="section-title text-white">Your next stay is waiting</h2>
-        <p class="section-subtitle text-white">Explore hotels, compare rooms, and book directly with confidence.</p>
-        <div class="d-flex justify-content-center gap-3 mt-4 flex-wrap">
-            <a href="{% url 'hotel:hotel_list' %}" class="btn btn-light btn-lg">Browse Hotels</a>
-            <a href="{% url 'hotel:contact' %}" class="btn btn-outline-light btn-lg">Contact Support</a>
-        </div>
-    </div>
-</section>
-
+</div>
 {% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<script src="{% static 'js/home-slider.js' %}"></script>
+{% endblock extra_js %}

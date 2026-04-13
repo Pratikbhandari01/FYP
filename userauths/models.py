@@ -11,6 +11,7 @@ GENDER_CHOICES = (
     ("Others", "Others"),
 )
 
+
 IDENTITY_TYPE = (
     ("Passport", "Passport"),
     ("Driver's License", "Driver's License"),
@@ -28,13 +29,21 @@ class User(AbstractUser):
         ("customer", "Customer"),
         ("agent", "Agent"),
     )
+    AGENT_APPROVAL_CHOICES = (
+        ("approved", "Approved"),
+        ("pending", "Pending"),
+        ("rejected", "Rejected"),
+    )
     full_name = models.CharField(max_length=255, blank=True, null=True )
     username = models.CharField(max_length=150, unique=True)
     email = models.EmailField(unique=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default="Others")
     otp = models.CharField(max_length=10, blank=True, null=True)
+    email_verified = models.BooleanField(default=False)
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default="customer")
+    agent_approval_status = models.CharField(max_length=10, choices=AGENT_APPROVAL_CHOICES, default="approved")
+    agent_rejection_reason = models.TextField(blank=True, null=True)
 
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS = ["email"]   # ✅ username हटायो
@@ -50,7 +59,6 @@ class Profile(models.Model):
     full_name = models.CharField(max_length=255, blank=True, null=True )
     phone = models.CharField(max_length=20, blank=True, null=True)
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default="Others")
-
     country = models.CharField(max_length=50, blank=True, null=True)
     city = models.CharField(max_length=50, blank=True, null=True)
     address = models.CharField(max_length=255, blank=True, null=True)

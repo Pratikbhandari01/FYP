@@ -1,49 +1,48 @@
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
+<nav class="navbar navbar-expand-lg site-navbar">
     <div class="container">
-        <a class="navbar-brand" href="{% url 'hotel:index' %}">NepStay</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <a class="navbar-brand brand-mark" href="{% url 'hotel:index' %}">
+            <span class="brand-dot"><i class="bi bi-buildings-fill"></i></span>
+            <span>NepStay</span>
+        </a>
+
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
+
         <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'hotel:index' %}">Home</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'hotel:hotel_list' %}">Hotels</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'hotel:rooms' %}">Rooms</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'hotel:about' %}">About</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'hotel:contact' %}">Contact</a>
-                </li>
+            <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
+                {% if not user.is_authenticated or user.role != 'agent' %}
+                <li class="nav-item"><a class="nav-link" href="{% url 'hotel:index' %}">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'hotel:hotel_list' %}">Hotels</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'hotel:rooms' %}">Rooms</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'hotel:about' %}">About</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'hotel:contact' %}">Contact</a></li>
+                {% endif %}
+
                 {% if user.is_authenticated %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            {{ user.username }}
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                            {% if user.role == 'agent' %}
-                                <li><a class="dropdown-item" href="{% url 'userauths:agent_dashboard' %}">Dashboard</a></li>
-                            {% else %}
-                                <li><a class="dropdown-item" href="{% url 'hotel:customer_bookings' %}">My Bookings</a></li>
-                            {% endif %}
-                            <li><a class="dropdown-item" href="{% url 'hotel:profile' %}">Profile</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{% url 'userauths:logout' %}">Logout</a></li>
-                        </ul>
-                    </li>
+                <li class="nav-item dropdown ms-lg-2">
+                    <a class="nav-link dropdown-toggle nav-user" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="user-pill">{{ user.username|first|upper }}</span>
+                        <span>{{ user.username }}</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end user-menu" aria-labelledby="navbarDropdown">
+                        {% if user.role == 'agent' %}
+                        <li><a class="dropdown-item" href="{% url 'userauths:agent_dashboard' %}"><i class="bi bi-grid"></i> Dashboard</a></li>
+                        {% else %}
+                        <li><a class="dropdown-item" href="{% url 'hotel:customer_bookings' %}"><i class="bi bi-receipt"></i> My Bookings</a></li>
+                        {% endif %}
+                        <li><a class="dropdown-item" href="{% url 'hotel:profile' %}"><i class="bi bi-person"></i> Profile</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="{% url 'userauths:logout' %}"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                    </ul>
+                </li>
                 {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'userauths:login' %}">Login</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'userauths:register' %}">Sign Up</a>
-                    </li>
+                <li class="nav-item ms-lg-2 mt-2 mt-lg-0">
+                    <a class="btn btn-signin" href="{% url 'userauths:login' %}">Sign In</a>
+                </li>
+                <li class="nav-item ms-lg-2 mt-2 mt-lg-0">
+                    <a class="btn btn-outline-primary rounded-pill px-3" href="{% url 'userauths:register' %}">Create Account</a>
+                </li>
                 {% endif %}
             </ul>
         </div>
