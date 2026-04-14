@@ -2,115 +2,217 @@
 {% load static %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 <link rel="stylesheet" href="{% static 'css/agent_portal.css' %}">
 {% endblock %}
 
 {% block content %}
-<section class="container agent-shell">
-    <div class="agent-hero d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
-        <div>
-            <h1>Agent Dashboard</h1>
-            <p class="mb-0 mt-2">Manage only your hotels and rooms from one focused workspace.</p>
-            <div class="agent-stat-grid">
-                <div class="agent-stat">
-                    <small>Total Hotels</small>
-                    <span class="value">{{ hotels|length }}</span>
-                </div>
-                <div class="agent-stat">
-                    <small>Role</small>
-                    <span class="value text-capitalize">{{ request.user.role }}</span>
-                </div>
-                <div class="agent-stat">
-                    <small>Welcome</small>
-                    <span class="value">{{ request.user.username }}</span>
-                </div>
-                <div class="agent-stat">
-                    <small>Avg Rating</small>
-                    <span class="value">{{ average_rating_received }}/5</span>
-                </div>
-                <div class="agent-stat">
-                    <small>Total Reviews</small>
-                    <span class="value">{{ received_reviews_count }}</span>
+<section class="agentdash-page">
+    <div class="agentdash-layout">
+        <aside class="agentdash-sidebar">
+            <div class="agentdash-brand">
+                <span class="dot"></span>
+                <div>
+                    <h2>Agent Board</h2>
+                    <p>{{ request.user.username }}</p>
                 </div>
             </div>
-        </div>
-        <div class="d-flex gap-2 flex-wrap">
-            <a href="{% url 'hotel:create_hotel' %}" class="btn btn-warning fw-semibold">
-                <i class="fas fa-plus me-1"></i>Add Hotel
-            </a>
-            <a href="{% url 'hotel:agent_hotel_list' %}" class="btn btn-light fw-semibold">
-                <i class="fas fa-building me-1"></i>My Hotels
-            </a>
-        </div>
-    </div>
 
-    <div class="card agent-panel">
-        <div class="card-header">
-            <h5 class="card-title mb-0">Your Hotels</h5>
-        </div>
-        <div class="card-body">
-            {% if hotels %}
-            <div class="list-group">
-                {% for hotel in hotels %}
-                    <div class="list-group-item agent-list-item d-flex flex-column flex-lg-row justify-content-between align-items-lg-center">
-                        <div class="mb-2 mb-lg-0">
-                            <a href="{% url 'hotel:hotel_detail' hotel.id %}" class="title h5 mb-1 d-inline-block">{{ hotel.name }}</a>
-                            <p class="mb-0 text-secondary">{{ hotel.address }}</p>
-                        </div>
-                        <div class="agent-actions">
-                            <a href="{% url 'hotel:room_type_list' hotel.id %}" class="btn btn-sm btn-outline-warning">
-                                <i class="fas fa-layer-group me-1"></i>Room Types
-                            </a>
-                            <a href="{% url 'hotel:rooms' %}?hotel={{ hotel.id }}" class="btn btn-sm btn-outline-dark">
-                                <i class="fas fa-door-open me-1"></i>View Rooms
-                            </a>
-                            <a href="{% url 'hotel:add_room' hotel.id %}" class="btn btn-sm btn-outline-success">
-                                <i class="fas fa-plus me-1"></i>Add Room
-                            </a>
-                            <a href="{% url 'hotel:update_hotel' hotel.id %}" class="btn btn-sm btn-outline-primary">
-                                <i class="fas fa-edit me-1"></i>Edit
-                            </a>
-                            <a href="{% url 'hotel:delete_hotel' hotel.id %}" class="btn btn-sm btn-outline-danger">
-                                <i class="fas fa-trash me-1"></i>Delete
-                            </a>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <div class="text-center py-4">
-                <h5>No hotels yet</h5>
-                <p class="text-secondary mb-3">Start by creating your first hotel listing.</p>
-                <a href="{% url 'hotel:create_hotel' %}" class="btn btn-primary">Create Hotel</a>
-            </div>
-            {% endif %}
-        </div>
-    </div>
+            <nav class="agentdash-nav">
+                <a class="active" href="{% url 'userauths:agent_dashboard' %}"><i class="bi bi-grid"></i> Dashboard</a>
+                <a href="{% url 'hotel:agent_hotel_list' %}"><i class="bi bi-buildings"></i> My Hotels</a>
+                <a href="{% url 'hotel:create_hotel' %}"><i class="bi bi-plus-square"></i> Create Hotel</a>
+                <a href="{% url 'hotel:rooms' %}"><i class="bi bi-door-open"></i> Rooms</a>
+                <a href="{% url 'hotel:contact' %}"><i class="bi bi-chat-left-text"></i> Support</a>
+            </nav>
+        </aside>
 
-    <div class="card agent-panel mt-4">
-        <div class="card-header">
-            <h5 class="card-title mb-0">Recent Ratings On Your Hotels</h5>
-        </div>
-        <div class="card-body">
-            {% if received_reviews %}
-            <div class="list-group">
-                {% for review in received_reviews %}
-                <div class="list-group-item d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-2">
-                    <div>
-                        <div class="fw-semibold">{{ review.hotel.name }}</div>
-                        <small class="text-secondary">By {{ review.user.full_name|default:review.user.username }} on {{ review.created_at|date:'M d, Y' }}</small>
-                        <p class="mb-0 text-secondary">{{ review.comment|default:'No comment provided.' }}</p>
-                    </div>
-                    <div class="text-warning fw-bold">
-                        {{ review.rating }}/5 <i class="fas fa-star"></i>
-                    </div>
+        <main class="agentdash-main">
+            <header class="agentdash-top">
+                <div>
+                    <p class="eyebrow">Performance workspace</p>
+                    <h1>Dashboard overview</h1>
                 </div>
-                {% endfor %}
+                <div class="quick-actions">
+                    <a href="{% url 'hotel:create_hotel' %}" class="btn btn-sm btn-light"><i class="bi bi-plus-lg"></i> Add Hotel</a>
+                    <a href="{% url 'hotel:agent_hotel_list' %}" class="btn btn-sm btn-dark"><i class="bi bi-arrow-right-short"></i> Manage</a>
+                </div>
+            </header>
+
+            <div class="agentdash-kpis">
+                <article class="kpi-card blue">
+                    <p>Total Hotels</p>
+                    <h3>{{ total_hotels }}</h3>
+                </article>
+                <article class="kpi-card green">
+                    <p>Total Rooms</p>
+                    <h3>{{ total_rooms }}</h3>
+                </article>
+                <article class="kpi-card yellow">
+                    <p>Check-ins Today</p>
+                    <h3>{{ check_ins_today }}</h3>
+                </article>
+                <article class="kpi-card orange">
+                    <p>Check-outs Today</p>
+                    <h3>{{ check_outs_today }}</h3>
+                </article>
             </div>
-            {% else %}
-            <p class="mb-0 text-secondary">No ratings yet for your hotels.</p>
-            {% endif %}
-        </div>
+
+            <div class="agentdash-panels">
+                <section class="panel card-chart">
+                    <div class="panel-head">
+                        <h3>Reservation Activity</h3>
+                        <span>Last 7 days</span>
+                    </div>
+                    <canvas id="reservationTrend" height="220"></canvas>
+                </section>
+
+                <section class="panel card-gauge">
+                    <div class="panel-head">
+                        <h3>Booking Completion</h3>
+                    </div>
+                    <div class="gauge" style="--gauge: {{ completion_rate }}%;">
+                        <div class="gauge-center">
+                            <strong>{{ completion_rate }}%</strong>
+                            <span>Completed</span>
+                        </div>
+                    </div>
+                    <ul class="gauge-stats">
+                        <li><span>Total Bookings</span><strong>{{ total_bookings }}</strong></li>
+                        <li><span>Average Rating</span><strong>{{ average_rating_received }}/5</strong></li>
+                        <li><span>Total Reviews</span><strong>{{ received_reviews_count }}</strong></li>
+                    </ul>
+                </section>
+            </div>
+
+            <div class="agentdash-panels lower">
+                <section class="panel hotels-panel">
+                    <div class="panel-head">
+                        <h3>My Hotels</h3>
+                    </div>
+                    {% if hotels %}
+                    <div class="mini-table-wrap">
+                        <table class="mini-table">
+                            <thead>
+                                <tr>
+                                    <th>Hotel</th>
+                                    <th>Location</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for hotel in hotels|slice:':6' %}
+                                <tr>
+                                    <td>{{ hotel.name }}</td>
+                                    <td>{{ hotel.location|default:'-' }}</td>
+                                    <td><span class="chip text-capitalize">{{ hotel.status }}</span></td>
+                                    <td><a href="{% url 'hotel:update_hotel' hotel.id %}">Edit</a></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="empty-copy">No hotels yet. Create your first listing to start managing inventory.</p>
+                    {% endif %}
+                </section>
+
+                <section class="panel reviews-panel">
+                    <div class="panel-head">
+                        <h3>Recent Ratings</h3>
+                    </div>
+                    {% if received_reviews %}
+                        <ul class="review-list">
+                            {% for review in received_reviews|slice:':5' %}
+                            <li>
+                                <div>
+                                    <strong>{{ review.hotel.name }}</strong>
+                                    <p>{{ review.user.full_name|default:review.user.username }} - {{ review.created_at|date:'M d, Y' }}</p>
+                                </div>
+                                <span>{{ review.rating }}/5</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="empty-copy">No ratings yet for your hotels.</p>
+                    {% endif %}
+                </section>
+            </div>
+        </main>
     </div>
 </section>
+
+{{ chart_labels|json_script:"dashboard-chart-labels" }}
+{{ chart_new_bookings|json_script:"dashboard-chart-bookings" }}
+{{ chart_checkins|json_script:"dashboard-chart-checkins" }}
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const chartCanvas = document.getElementById('reservationTrend');
+        if (!chartCanvas || typeof Chart === 'undefined') {
+            return;
+        }
+
+        const labels = JSON.parse(document.getElementById('dashboard-chart-labels').textContent);
+        const bookings = JSON.parse(document.getElementById('dashboard-chart-bookings').textContent);
+        const checkins = JSON.parse(document.getElementById('dashboard-chart-checkins').textContent);
+
+        new Chart(chartCanvas, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'New Bookings',
+                        data: bookings,
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.12)',
+                        fill: true,
+                        tension: 0.35,
+                        borderWidth: 3,
+                        pointRadius: 2,
+                    },
+                    {
+                        label: 'Check-ins',
+                        data: checkins,
+                        borderColor: '#fb7185',
+                        backgroundColor: 'rgba(251, 113, 133, 0.08)',
+                        fill: true,
+                        tension: 0.35,
+                        borderWidth: 3,
+                        pointRadius: 2,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: {
+                            boxWidth: 12,
+                            usePointStyle: true,
+                            pointStyle: 'circle',
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: { precision: 0 },
+                        grid: { color: 'rgba(148, 163, 184, 0.2)' }
+                    }
+                }
+            }
+        });
+    });
+</script>
 {% endblock %}

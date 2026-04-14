@@ -14,6 +14,7 @@ from django.views.generic import CreateView, UpdateView, DeleteView
 from django.urls import reverse, reverse_lazy
 from .models import RoomType, Hotel, Booking, Room, ContactMessage, Review
 from .forms import ContactForm, HotelSearchForm, HotelForm, RoomForm, RoomTypeForm, ReviewForm
+from .notifications import send_booking_notification_email
 from userauths.decorators import agent_required
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
@@ -197,10 +198,13 @@ def book_room(request, room_id):
         messages.warning(request, "This room is already booked.")
         return redirect('hotel:rooms')
 
+    today = datetime.now().date()
+    book_context = {'room': room, 'today': today}
+
     if request.method == 'POST':
         if not settings.KHALTI_SECRET_KEY:
             messages.error(request, 'Khalti secret key is not configured on server. Set KHALTI_SECRET_KEY first.')
-            return render(request, 'hotel/book_room.html', {'room': room})
+            return render(request, 'hotel/book_room.html', book_context)
 
         full_name = request.POST.get('full_name', '').strip() or request.user.username
         email = request.POST.get('email', '').strip() or request.user.email
@@ -210,18 +214,26 @@ def book_room(request, room_id):
 
         if not phone or not check_in or not check_out:
             messages.error(request, "Please fill out all booking fields.")
-            return render(request, 'hotel/book_room.html', {'room': room})
+            return render(request, 'hotel/book_room.html', book_context)
 
         try:
             check_in_date = datetime.strptime(check_in, '%Y-%m-%d').date()
             check_out_date = datetime.strptime(check_out, '%Y-%m-%d').date()
         except ValueError:
             messages.error(request, "Invalid date format. Please use YYYY-MM-DD.")
-            return render(request, 'hotel/book_room.html', {'room': room})
+            return render(request, 'hotel/book_room.html', book_context)
+
+        if check_in_date < today:
+            messages.error(request, "Check-in date cannot be in the past.")
+            return render(request, 'hotel/book_room.html', book_context)
+
+        if check_out_date < today:
+            messages.error(request, "Check-out date cannot be in the past.")
+            return render(request, 'hotel/book_room.html', book_context)
 
         if check_out_date <= check_in_date:
             messages.error(request, "Check-out date must be after check-in date.")
-            return render(request, 'hotel/book_room.html', {'room': room})
+            return render(request, 'hotel/book_room.html', book_context)
 
         total_days = (check_out_date - check_in_date).days
         total_price = room.price * Decimal(total_days)
@@ -240,6 +252,8 @@ def book_room(request, room_id):
             total_days=total_days,
             payment_status='pending',
         )
+
+        send_booking_notification_email(booking, 'booking_created')
 
         return_url = request.build_absolute_uri(reverse('hotel:khalti_payment_callback'))
         website_url = request.build_absolute_uri('/')
@@ -269,7 +283,7 @@ def book_room(request, room_id):
         except (requests.RequestException, ValueError):
             booking.delete()
             messages.error(request, 'Unable to connect to Khalti right now. Please try again.')
-            return render(request, 'hotel/book_room.html', {'room': room})
+            return render(request, 'hotel/book_room.html', book_context)
 
         if response.status_code != 200 and _is_invalid_token_error(data):
             # Many integrations use sandbox keys. Retry once against dev endpoint.
@@ -298,11 +312,11 @@ def book_room(request, room_id):
                     'Also make sure KHALTI_SECRET_KEY does not include the text "Key".'
                 )
             messages.error(request, f'Khalti payment could not be initialized: {khalti_reason}')
-            return render(request, 'hotel/book_room.html', {'room': room})
+            return render(request, 'hotel/book_room.html', book_context)
 
         return redirect(payment_url)
 
-    return render(request, 'hotel/book_room.html', {'room': room})
+    return render(request, 'hotel/book_room.html', book_context)
 
 
 @login_required(login_url='userauths:login')
@@ -333,8 +347,11 @@ def khalti_payment_callback(request):
         return redirect('hotel:customer_bookings')
 
     if lookup_response.status_code == 200 and lookup_data.get('status') == 'Completed':
+        previous_status = booking.payment_status
         booking.payment_status = 'completed'
         booking.save(update_fields=['payment_status'])
+        if previous_status != 'completed':
+            send_booking_notification_email(booking, 'payment_completed', previous_status=previous_status)
 
         if booking.room.availability or booking.room.is_available:
             booking.room.availability = False
@@ -344,8 +361,11 @@ def khalti_payment_callback(request):
         messages.success(request, f'Payment successful. Room {booking.room.room_number} is now booked.')
         return redirect('hotel:customer_bookings')
 
+    previous_status = booking.payment_status
     booking.payment_status = 'failed'
     booking.save(update_fields=['payment_status'])
+    if previous_status != 'failed':
+        send_booking_notification_email(booking, 'payment_failed', previous_status=previous_status)
     fail_reason = _extract_khalti_error(lookup_data)
     messages.error(request, f'Payment was not completed: {fail_reason}')
     return redirect('hotel:rooms')

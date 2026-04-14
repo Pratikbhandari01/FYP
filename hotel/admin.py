@@ -3,6 +3,7 @@ from django import forms
 from django.urls import reverse
 from django.utils.html import format_html
 from .models import Booking, ContactMessage, Hotel, Review, RoomType, Room
+from .notifications import send_booking_notification_email
 
 
 
@@ -174,18 +175,51 @@ class BookingAdmin(admin.ModelAdmin):
     )
     actions = ['mark_completed', 'mark_pending', 'mark_failed']
 
+    def save_model(self, request, obj, form, change):
+        previous_status = None
+        if change and obj.pk:
+            previous = Booking.objects.filter(pk=obj.pk).only('payment_status').first()
+            previous_status = previous.payment_status if previous else None
+        super().save_model(request, obj, form, change)
+        if previous_status and previous_status != obj.payment_status:
+            send_booking_notification_email(obj, 'payment_status_changed', previous_status=previous_status)
+
     def mark_completed(self, request, queryset):
-        queryset.update(payment_status='completed')
+        updated = 0
+        for booking in queryset.select_related('hotel', 'room'):
+            old_status = booking.payment_status
+            if old_status == 'completed':
+                continue
+            booking.payment_status = 'completed'
+            booking.save(update_fields=['payment_status'])
+            send_booking_notification_email(booking, 'payment_status_changed', previous_status=old_status)
+            updated += 1
         self.message_user(request, "Selected bookings are marked completed.")
     mark_completed.short_description = "Mark selected bookings as completed"
 
     def mark_pending(self, request, queryset):
-        queryset.update(payment_status='pending')
+        updated = 0
+        for booking in queryset.select_related('hotel', 'room'):
+            old_status = booking.payment_status
+            if old_status == 'pending':
+                continue
+            booking.payment_status = 'pending'
+            booking.save(update_fields=['payment_status'])
+            send_booking_notification_email(booking, 'payment_status_changed', previous_status=old_status)
+            updated += 1
         self.message_user(request, "Selected bookings are marked pending.")
     mark_pending.short_description = "Mark selected bookings as pending"
 
     def mark_failed(self, request, queryset):
-        queryset.update(payment_status='failed')
+        updated = 0
+        for booking in queryset.select_related('hotel', 'room'):
+            old_status = booking.payment_status
+            if old_status == 'failed':
+                continue
+            booking.payment_status = 'failed'
+            booking.save(update_fields=['payment_status'])
+            send_booking_notification_email(booking, 'payment_status_changed', previous_status=old_status)
+            updated += 1
         self.message_user(request, "Selected bookings are marked failed.")
     mark_failed.short_description = "Mark selected bookings as failed"
 

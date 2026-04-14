@@ -434,4 +434,52 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 <script src="{% static 'js/home-slider.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var checkInInput = document.getElementById('checkin');
+    var checkOutInput = document.getElementById('checkout');
+
+    if (!checkInInput || !checkOutInput) {
+        return;
+    }
+
+    function formatDate(dateObj) {
+        var year = dateObj.getFullYear();
+        var month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        var day = String(dateObj.getDate()).padStart(2, '0');
+        return year + '-' + month + '-' + day;
+    }
+
+    function addDays(dateString, days) {
+        var dateObj = new Date(dateString + 'T00:00:00');
+        if (Number.isNaN(dateObj.getTime())) {
+            return '';
+        }
+        dateObj.setDate(dateObj.getDate() + days);
+        return formatDate(dateObj);
+    }
+
+    function syncDateConstraints() {
+        var todayString = formatDate(new Date());
+        checkInInput.min = todayString;
+
+        var checkoutMin = checkInInput.value ? addDays(checkInInput.value, 1) : addDays(todayString, 1);
+        if (checkoutMin) {
+            checkOutInput.min = checkoutMin;
+        }
+
+        if (checkInInput.value && checkInInput.value < todayString) {
+            checkInInput.value = '';
+        }
+
+        if (checkOutInput.value && checkOutInput.value < checkOutInput.min) {
+            checkOutInput.value = '';
+        }
+    }
+
+    checkInInput.addEventListener('change', syncDateConstraints);
+    checkOutInput.addEventListener('change', syncDateConstraints);
+    syncDateConstraints();
+});
+</script>
 {% endblock extra_js %}

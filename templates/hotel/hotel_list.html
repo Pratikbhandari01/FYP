@@ -4,7 +4,6 @@
 {% block title %}Browse Hotels | Nepstay{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-sA+4J8fLecxB2S/bR5CV2lE0p4nH3UX0YPDVu/0m6G8=" crossorigin="" />
 <style>
     .hotels-showcase {
         position: relative;
@@ -260,42 +259,6 @@
         border-color: #0b786f;
     }
 
-    .map-panel {
-        border-radius: 1.2rem;
-        background: #ffffff;
-        border: 1px solid rgba(15, 23, 42, 0.1);
-        box-shadow: 0 20px 42px rgba(15, 23, 42, 0.08);
-        overflow: hidden;
-        margin-bottom: 1.2rem;
-    }
-
-    .map-panel-head {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.8rem;
-        padding: 0.9rem 1rem;
-        border-bottom: 1px solid rgba(15, 23, 42, 0.08);
-    }
-
-    .map-panel-title {
-        font-weight: 700;
-        margin: 0;
-        color: #0f172a;
-        font-size: 1rem;
-    }
-
-    .map-status {
-        color: #475569;
-        font-size: 0.84rem;
-        margin: 0;
-    }
-
-    #hotelMap {
-        height: 360px;
-        width: 100%;
-    }
-
     @keyframes floatOrb {
         0%, 100% { transform: translateY(0px); }
         50% { transform: translateY(-16px); }
@@ -332,9 +295,6 @@
             font-size: 0.8rem;
         }
 
-        #hotelMap {
-            height: 300px;
-        }
     }
 </style>
 {% endblock %}
@@ -398,14 +358,6 @@
             </div>
 
             <div class="col-lg-9">
-                <section class="map-panel" aria-label="Hotel locations map">
-                    <div class="map-panel-head">
-                        <h2 class="map-panel-title"><i class="bi bi-map"></i> Hotel Locations</h2>
-                        <p id="mapStatus" class="map-status">Preparing map...</p>
-                    </div>
-                    <div id="hotelMap"></div>
-                </section>
-
                 {% if hotels %}
                 <div class="row hotels-grid">
                     {% for hotel in hotels %}
@@ -481,24 +433,9 @@
         </div>
     </div>
 </section>
-
-<script id="hotel-map-data" type="application/json">
-[
-{% for hotel in hotels %}
-    {
-        "id": {{ hotel.id }},
-        "name": "{{ hotel.name|escapejs }}",
-        "location": "{{ hotel.location|default_if_none:''|escapejs }}",
-        "url": "{% url 'hotel:hotel_detail' hotel.id %}"
-    }{% if not forloop.last %},{% endif %}
-{% endfor %}
-]
-</script>
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-o9N1j7kGStp2XG2f2f0z8V+0A0wLJf2mRkR3vY6u+3s=" crossorigin=""></script>
-<script src="{% static 'js/hotel-map.js' %}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const query = document.getElementById('hotel-query');

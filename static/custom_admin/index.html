@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nepstay Admin Panel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg:#eef3fb; --surface:#fff; --border:#d7e4ef; --text:#1f3448; --muted:#637f98; --blue:#3b82f6; --teal:#14b8a6; --amber:#f59e0b; --violet:#6366f1; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:Manrope,Segoe UI,sans-serif; background:radial-gradient(circle at 12% 8%,#ffffff 0,rgba(255,255,255,0) 42%),linear-gradient(155deg,#f2f6fc 0,#e8eef9 100%); color:var(--text); }
+    .shell { min-height:100vh; display:grid; grid-template-columns:270px 1fr; }
+    .sidebar { border-right:1px solid var(--border); background:linear-gradient(180deg,#f8fbff,#edf5ff); padding:16px; box-shadow:0 0 0 1px rgba(148,163,184,.08) inset; }
+    .brand { font-family:'Space Grotesk',sans-serif; font-size:28px; font-weight:700; margin:0 0 14px; }
+    .brand span { display:block; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+    .menu { display:grid; gap:8px; position:relative; }
+    .menu button, .menu a { text-align:left; border:1px solid #c9d9eb; background:#fff; color:#284760; border-radius:12px; padding:11px 13px; font-weight:700; text-decoration:none; cursor:pointer; transition:.22s ease; position:relative; z-index:1; }
+    .menu button.active, .menu button:hover, .menu a:hover { background:#eaf4ff; border-color:#9ec2e7; color:#1e4f78; transform:translateY(-1px); }
+    .content { padding:18px; display:grid; gap:12px; }
+    .top { border:1px solid var(--border); border-radius:16px; background:linear-gradient(120deg,#ffffff,#ebf4ff,#e9fbf2); padding:16px 18px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 16px 28px rgba(30,58,138,.08); }
+    .top h1 { margin:0; font-size:32px; }
+    .stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
+    .stat { border-radius:14px; padding:14px; color:#fff; box-shadow:0 14px 24px rgba(30,58,138,.14); }
+    .stat p { margin:0; font-size:12px; color:rgba(255,255,255,.88); letter-spacing:.06em; text-transform:uppercase; font-weight:800; }
+    .stat h2 { margin:6px 0 0; font-size:34px; }
+    .stat.blue { background:linear-gradient(135deg,#4da8ff 0,#2d6df6 100%); }
+    .stat.green { background:linear-gradient(135deg,#37d996 0,#12a286 100%); }
+    .stat.amber { background:linear-gradient(135deg,#ffc55a 0,#f59d3d 100%); }
+    .stat.coral { background:linear-gradient(135deg,#ff9876 0,#ff7043 100%); }
+    .dash-grid { display:grid; grid-template-columns:1.15fr 2fr; gap:10px; margin-top:10px; }
+    .panel { border:1px solid var(--border); border-radius:14px; background:#fff; padding:12px; box-shadow:0 10px 18px rgba(30,58,138,.06); }
+    .panel-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+    .panel-head h3{margin:0;font-size:20px}
+    .ring-wrap { display:grid; place-items:center; min-height:180px; }
+    .ring {
+      --p:0;
+      width:170px;
+      height:170px;
+      border-radius:50%;
+      background:conic-gradient(#2d6df6 calc(var(--p) * 1%), #e5edf8 0);
+      display:grid;
+      place-items:center;
+    }
+    .ring > div { width:128px; height:128px; border-radius:50%; background:#fff; display:grid; place-items:center; text-align:center; }
+    .ring strong { font-size:28px; line-height:1; }
+    .ring span { font-size:12px; color:#64748b; }
+    .kpis { display:grid; gap:8px; margin-top:8px; }
+    .kpis li { list-style:none; display:flex; justify-content:space-between; border:1px solid #e2e8f0; border-radius:10px; padding:8px 10px; font-size:13px; }
+    .sparkline { width:100%; height:220px; border:1px dashed #dbe7f6; border-radius:10px; padding:10px; background:linear-gradient(180deg,#f7fbff,#ffffff); }
+    .sparkline svg { width:100%; height:100%; overflow:visible; }
+    .sparkline .line-a { fill:none; stroke:#2d6df6; stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }
+    .sparkline .line-b { fill:none; stroke:#ff7043; stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }
+    .sparkline .fill-a { fill:rgba(45,109,246,.12); }
+    .sparkline .fill-b { fill:rgba(255,112,67,.09); }
+    .spark-meta { display:flex; gap:14px; align-items:center; margin-top:8px; font-size:12px; color:#64748b; }
+    .dot { width:10px; height:10px; border-radius:50%; display:inline-block; margin-right:6px; }
+    .dot.a { background:#2d6df6; }
+    .dot.b { background:#ff7043; }
+    table { width:100%; border-collapse:collapse; }
+    th,td { padding:10px; border-bottom:1px solid #e7eff6; white-space:nowrap; text-align:left; }
+    th { font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); }
+    tr:hover td { background:#f2f8ff; }
+    .status { border-radius:999px; padding:4px 10px; font-size:11px; font-weight:800; text-transform:uppercase; }
+    .status.completed { background:#e4f9ee; color:#0f7c54; }
+    .status.pending { background:#fff4e6; color:#9b6113; }
+    .status.failed { background:#ffecef; color:#972d40; }
+    .row-actions { display:flex; gap:6px; }
+    .btn { border:1px solid var(--border); background:#fff; color:#2d4e68; border-radius:999px; padding:5px 10px; font-size:12px; font-weight:800; cursor:pointer; }
+    .btn.primary { border-color:#b8d4ea; background:#ecf6ff; color:#1e5078; }
+    .btn.danger { border-color:#edc4cb; background:#fff0f2; color:#982e40; }
+    .muted { color:var(--muted); }
+    .modal-wrap { position:fixed; inset:0; display:none; align-items:center; justify-content:center; padding:18px; background:rgba(7,20,33,.45); z-index:1000; }
+    .modal-wrap.show { display:flex; }
+    .modal { width:min(760px,100%); max-height:90vh; overflow:auto; border:1px solid var(--border); border-radius:14px; background:#fff; padding:14px; box-shadow:0 24px 60px rgba(16,30,44,.25); }
+    .modal-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+    .modal-head h3 { margin:0; font-size:22px; }
+    .modal-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+    .field { display:grid; gap:6px; }
+    .field.full { grid-column:1 / -1; }
+    .field label { font-size:12px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
+    .field input, .field select, .field textarea { width:100%; border:1px solid var(--border); border-radius:10px; padding:10px; font:inherit; color:var(--text); background:#fff; }
+    .field textarea { min-height:94px; resize:vertical; }
+    .field input[type='checkbox'] { width:auto; transform:scale(1.15); margin-top:4px; }
+    .modal-foot { display:flex; justify-content:flex-end; gap:8px; margin-top:12px; }
+    .form-error { margin-top:8px; color:#a02138; font-weight:700; }
+    .toast-stack {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      z-index: 2000;
+      display: grid;
+      gap: 8px;
+      width: min(360px, calc(100vw - 24px));
+    }
+    .toast-note {
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      border: 1px solid #dbe5f2;
+      box-shadow: 0 10px 20px rgba(15, 23, 42, 0.14);
+      animation: toastIn .22s ease;
+    }
+    .toast-note.success {
+      background: #ecfdf5;
+      border-color: #a7f3d0;
+      color: #065f46;
+    }
+    .toast-note.error {
+      background: #fef2f2;
+      border-color: #fecaca;
+      color: #991b1b;
+    }
+    @keyframes toastIn {
+      from { transform: translateY(8px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    @media (max-width:1180px){ .shell{grid-template-columns:1fr;} .dash-grid{grid-template-columns:1fr;} }
+    @media (max-width:900px){ .stats{grid-template-columns:repeat(2,minmax(0,1fr));} }
+    @media (max-width:640px){ .stats{grid-template-columns:1fr;} .top{flex-direction:column;align-items:flex-start;} .modal-grid{grid-template-columns:1fr;} }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <h2 class="brand">Nepstay</h2>
+      <nav class="menu">
+        <button class="tab active" data-tab="dashboard">Dashboard</button>
+        <button class="tab" data-tab="hotels">Hotels</button>
+        <button class="tab" data-tab="rooms">Rooms</button>
+        <button class="tab" data-tab="room-types">Room Types</button>
+        <button class="tab" data-tab="bookings">Bookings</button>
+        <button class="tab" data-tab="users">Users</button>
+        <button class="tab" data-tab="messages">Contact Messages</button>
+        <button class="tab" data-tab="reviews">Reviews</button>
+        <a href="/admin/logout/">Logout</a>
+      </nav>
+    </aside>
+    <main class="content">
+      <section class="top">
+        <h1 id="title">Dashboard</h1>
+        <div></div>
+      </section>
+
+      <section id="dashboardView">
+        <div class="stats" id="stats"></div>
+
+        <div class="dash-grid">
+          <div class="panel">
+            <div class="panel-head"><h3>Booking Health</h3></div>
+            <div class="ring-wrap">
+              <div class="ring" id="bookingRing" style="--p:0;"><div><strong id="completionPct">0%</strong><span>Completed</span></div></div>
+            </div>
+            <ul class="kpis" id="healthKpis"></ul>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head"><h3>Reservation Activity</h3><span class="muted">Recent bookings</span></div>
+            <div class="sparkline">
+              <svg id="sparkSvg" viewBox="0 0 620 210" preserveAspectRatio="none"></svg>
+            </div>
+            <div class="spark-meta">
+              <span><i class="dot a"></i>Booking Amount</span>
+              <span><i class="dot b"></i>Status Weight</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top:10px;">
+          <div class="panel-head"><h3>Recent Bookings</h3></div>
+          <div style="overflow:auto;"><table id="recentBookingsTable"></table></div>
+        </div>
+      </section>
+
+      <section id="tableView" class="panel" style="display:none;">
+        <div class="panel-head">
+          <h3 id="tableTitle">Data</h3>
+          <button class="btn primary" id="addRowBtn" type="button">Add New</button>
+        </div>
+        <div style="overflow:auto;"><table id="dataTable"></table></div>
+      </section>
+
+      <div class="modal-wrap" id="formModalWrap" role="dialog" aria-modal="true" aria-labelledby="formModalTitle">
+        <div class="modal">
+          <div class="modal-head">
+            <h3 id="formModalTitle">Form</h3>
+            <button type="button" class="btn" id="closeFormModalBtn">Close</button>
+          </div>
+          <form id="crudForm">
+            <div class="modal-grid" id="crudFormFields"></div>
+            <div id="crudFormError" class="form-error"></div>
+            <div class="modal-foot">
+              <button type="button" class="btn" id="cancelFormBtn">Cancel</button>
+              <button type="submit" class="btn primary">Save</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="flashStack" class="toast-stack" aria-live="polite" aria-atomic="true"></div>
+
+<script>
+const tabs = document.querySelectorAll('.tab');
+const dashboardView = document.getElementById('dashboardView');
+const tableView = document.getElementById('tableView');
+const title = document.getElementById('title');
+const tableTitle = document.getElementById('tableTitle');
+const dataTable = document.getElementById('dataTable');
+const addRowBtn = document.getElementById('addRowBtn');
+const formModalWrap = document.getElementById('formModalWrap');
+const formModalTitle = document.getElementById('formModalTitle');
+const closeFormModalBtn = document.getElementById('closeFormModalBtn');
+const cancelFormBtn = document.getElementById('cancelFormBtn');
+const crudForm = document.getElementById('crudForm');
+const crudFormFields = document.getElementById('crudFormFields');
+const crudFormError = document.getElementById('crudFormError');
+const flashStack = document.getElementById('flashStack');
+let currentTab = 'dashboard';
+let activeFormState = null;
+
+function showFlash(message, type='success'){
+  if(!flashStack || !message){
+    return;
+  }
+  const item = document.createElement('div');
+  item.className = `toast-note ${type}`;
+  item.textContent = message;
+  flashStack.appendChild(item);
+  setTimeout(() => {
+    item.remove();
+  }, 3200);
+}
+
+const CRUD_SCHEMAS = {
+  hotels: {
+    create: [
+      {name:'name', label:'Hotel Name', type:'text', required:true},
+      {name:'location', label:'Location', type:'text'},
+      {name:'status', label:'Status', type:'select', options:['pending','approved','rejected','blocked','live'], required:true},
+      {name:'featured', label:'Featured', type:'checkbox'},
+      {name:'agent_id', label:'Agent ID', type:'number'}
+    ],
+    edit: [
+      {name:'name', label:'Hotel Name', type:'text', required:true},
+      {name:'location', label:'Location', type:'text'},
+      {name:'status', label:'Status', type:'select', options:['pending','approved','rejected','blocked','live'], required:true},
+      {name:'featured', label:'Featured', type:'checkbox'},
+      {name:'agent_id', label:'Agent ID', type:'number'}
+    ]
+  },
+  rooms: {
+    create: [
+      {name:'hotel_id', label:'Hotel ID', type:'number', required:true},
+      {name:'room_type_id', label:'Room Type ID', type:'number', required:true},
+      {name:'room_number', label:'Room Number', type:'text', required:true},
+      {name:'price', label:'Price', type:'number', step:'0.01', required:true},
+      {name:'availability', label:'Available', type:'checkbox'}
+    ],
+    edit: [
+      {name:'room_number', label:'Room Number', type:'text', required:true},
+      {name:'price', label:'Price', type:'number', step:'0.01', required:true},
+      {name:'availability', label:'Available', type:'checkbox'}
+    ]
+  },
+  'room-types': {
+    create: [
+      {name:'hotel_id', label:'Hotel ID', type:'number', required:true},
+      {name:'name', label:'Room Type Name', type:'text', required:true},
+      {name:'price', label:'Price', type:'number', step:'0.01', required:true},
+      {name:'no_of_beds', label:'Number Of Beds', type:'number', required:true}
+    ],
+    edit: [
+      {name:'name', label:'Room Type Name', type:'text', required:true},
+      {name:'price', label:'Price', type:'number', step:'0.01', required:true},
+      {name:'no_of_beds', label:'Number Of Beds', type:'number', required:true}
+    ]
+  },
+  bookings: {
+    create: [
+      {name:'customer_id', label:'Customer ID (Optional)', type:'number'},
+      {name:'full_name', label:'Full Name', type:'text', required:true},
+      {name:'email', label:'Email', type:'email', required:true},
+      {name:'phone', label:'Phone', type:'text', required:true},
+      {name:'hotel_id', label:'Hotel ID', type:'number', required:true},
+      {name:'room_type_id', label:'Room Type ID', type:'number', required:true},
+      {name:'room_id', label:'Room ID', type:'number', required:true},
+      {name:'check_in', label:'Check In Date', type:'date', required:true},
+      {name:'check_out', label:'Check Out Date', type:'date', required:true},
+      {name:'total_price', label:'Total Price (Optional)', type:'number', step:'0.01'},
+      {name:'payment_status', label:'Payment Status', type:'select', options:['pending','completed','failed'], required:true},
+      {name:'is_active', label:'Active', type:'checkbox'}
+    ],
+    edit: [
+      {name:'payment_status', label:'Payment Status', type:'select', options:['pending','completed','failed'], required:true},
+      {name:'total_price', label:'Total Price', type:'number', step:'0.01', required:true},
+      {name:'is_active', label:'Active', type:'checkbox'}
+    ]
+  },
+  users: {
+    create: [
+      {name:'username', label:'Username', type:'text', required:true},
+      {name:'email', label:'Email', type:'email', required:true},
+      {name:'role', label:'Role', type:'select', options:['customer','agent'], required:true},
+      {name:'password', label:'Password', type:'password'}
+    ],
+    edit: [
+      {name:'email', label:'Email', type:'email', required:true},
+      {name:'role', label:'Role', type:'select', options:['customer','agent'], required:true},
+      {name:'agent_approval_status', label:'Agent Status', type:'select', options:['pending','approved','rejected'], required:true}
+    ]
+  },
+  messages: {
+    create: [
+      {name:'name', label:'Name', type:'text', required:true},
+      {name:'email', label:'Email', type:'email', required:true},
+      {name:'subject', label:'Subject', type:'text'},
+      {name:'message', label:'Message', type:'textarea', required:true},
+      {name:'is_read', label:'Mark As Read', type:'checkbox'},
+      {name:'user_id', label:'Linked User ID (Optional)', type:'number'}
+    ],
+    edit: [
+      {name:'name', label:'Name', type:'text', required:true},
+      {name:'email', label:'Email', type:'email', required:true},
+      {name:'subject', label:'Subject', type:'text'},
+      {name:'message', label:'Message', type:'textarea', required:true},
+      {name:'is_read', label:'Mark As Read', type:'checkbox'},
+      {name:'user_id', label:'Linked User ID (Optional)', type:'number'}
+    ]
+  },
+  reviews: {
+    create: [
+      {name:'hotel_id', label:'Hotel ID', type:'number', required:true},
+      {name:'user_id', label:'Customer User ID', type:'number', required:true},
+      {name:'agent_id', label:'Agent ID (Optional)', type:'number'},
+      {name:'rating', label:'Rating', type:'select', options:['1','2','3','4','5'], required:true},
+      {name:'comment', label:'Comment', type:'textarea'}
+    ],
+    edit: [
+      {name:'rating', label:'Rating', type:'select', options:['1','2','3','4','5'], required:true},
+      {name:'comment', label:'Comment', type:'textarea'}
+    ]
+  }
+};
+
+function escapeHtml(s){ return String(s ?? '').replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
+
+async function getJson(url){
+  const res = await fetch(url, {credentials:'same-origin'});
+  if(!res.ok){ throw new Error('Failed API: ' + url); }
+  return res.json();
+}
+
+function statusBadge(value){
+  const cls = String(value || '').toLowerCase();
+  return `<span class="status ${cls}">${escapeHtml(value)}</span>`;
+}
+
+function actionButtons(model, id, extra=''){
+  return `<div class="row-actions"><button class="btn" data-edit="${model}" data-id="${id}" data-row="${extra}">Edit</button><button class="btn danger" data-delete="${model}" data-id="${id}">Delete</button></div>`;
+}
+
+function buildTable(headers, rows){
+  const thead = `<thead><tr>${headers.map(h=>`<th>${escapeHtml(h)}</th>`).join('')}</tr></thead>`;
+  const tbody = `<tbody>${rows.join('')}</tbody>`;
+  return thead + tbody;
+}
+
+function prettyTabName(tab){
+  return tab.replace('-', ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function getSchema(tab, creating){
+  const bucket = CRUD_SCHEMAS[tab];
+  if(!bucket){ return []; }
+  return creating ? (bucket.create || []) : (bucket.edit || []);
+}
+
+function getFieldValue(field, row){
+  const raw = row ? row[field.name] : '';
+  if(field.type === 'checkbox'){
+    return Boolean(raw);
+  }
+  if(raw === null || raw === undefined || raw === '-'){
+    if(field.type === 'select' && field.options && field.options.length){
+      return String(field.options[0]);
+    }
+    return '';
+  }
+  return String(raw);
+}
+
+function renderInput(field, row){
+  const id = `field_${field.name}`;
+  const value = getFieldValue(field, row);
+  const fullClass = field.type === 'textarea' ? 'field full' : 'field';
+  if(field.type === 'checkbox'){
+    return `<div class="${fullClass}"><label for="${id}">${escapeHtml(field.label)}</label><input id="${id}" name="${field.name}" type="checkbox" ${value ? 'checked' : ''}></div>`;
+  }
+  if(field.type === 'textarea'){
+    return `<div class="${fullClass}"><label for="${id}">${escapeHtml(field.label)}</label><textarea id="${id}" name="${field.name}" ${field.required ? 'required' : ''}>${escapeHtml(value)}</textarea></div>`;
+  }
+  if(field.type === 'select'){
+    const optionsHtml = (field.options || []).map(opt => {
+      const optionValue = String(opt);
+      const selected = optionValue === value ? 'selected' : '';
+      return `<option value="${escapeHtml(optionValue)}" ${selected}>${escapeHtml(optionValue)}</option>`;
+    }).join('');
+    return `<div class="${fullClass}"><label for="${id}">${escapeHtml(field.label)}</label><select id="${id}" name="${field.name}" ${field.required ? 'required' : ''}>${optionsHtml}</select></div>`;
+  }
+
+  const stepAttr = field.step ? `step="${field.step}"` : '';
+  return `<div class="${fullClass}"><label for="${id}">${escapeHtml(field.label)}</label><input id="${id}" name="${field.name}" type="${field.type || 'text'}" value="${escapeHtml(value)}" ${stepAttr} ${field.required ? 'required' : ''}></div>`;
+}
+
+function openCrudForm(tab, creating, row, id){
+  const schema = getSchema(tab, creating);
+  if(!schema.length){
+    return;
+  }
+  activeFormState = {tab, creating, id};
+  formModalTitle.textContent = `${creating ? 'Add New' : 'Edit'} ${prettyTabName(tab)}`;
+  crudFormFields.innerHTML = schema.map(field => renderInput(field, row || {})).join('');
+  crudFormError.textContent = '';
+  formModalWrap.classList.add('show');
+}
+
+function closeCrudForm(){
+  activeFormState = null;
+  formModalWrap.classList.remove('show');
+  crudForm.reset();
+  crudFormFields.innerHTML = '';
+  crudFormError.textContent = '';
+}
+
+function readFormValues(tab, creating){
+  const schema = getSchema(tab, creating);
+  const values = {};
+  schema.forEach(field => {
+    const element = crudForm.querySelector(`[name="${field.name}"]`);
+    if(!element){
+      return;
+    }
+
+    if(field.type === 'checkbox'){
+      values[field.name] = element.checked;
+    } else {
+      values[field.name] = String(element.value || '').trim();
+    }
+  });
+  return values;
+}
+
+async function loadDashboard(){
+  const payload = await getJson('/admin/api/dashboard/');
+  const stats = payload.stats || {};
+  document.getElementById('stats').innerHTML = [
+    ['Hotels', stats.hotels || 0, 'blue'],
+    ['Rooms', stats.rooms || 0, 'green'],
+    ['Bookings', stats.bookings || 0, 'amber'],
+    ['Users', stats.users || 0, 'coral'],
+  ].map(([k,v,c]) => `<article class="stat ${c}"><p>${k}</p><h2>${v}</h2></article>`).join('');
+
+  const recent = payload.recent_bookings || [];
+  const completedCount = recent.filter(r => String(r.payment_status || '').toLowerCase() === 'completed').length;
+  const completionRate = recent.length ? Math.round((completedCount / recent.length) * 100) : 0;
+
+  const ring = document.getElementById('bookingRing');
+  const completionPct = document.getElementById('completionPct');
+  if(ring){ ring.style.setProperty('--p', String(completionRate)); }
+  if(completionPct){ completionPct.textContent = `${completionRate}%`; }
+
+  const pendingCount = recent.filter(r => String(r.payment_status || '').toLowerCase() === 'pending').length;
+  const failedCount = recent.filter(r => String(r.payment_status || '').toLowerCase() === 'failed').length;
+  const totalAmount = recent.reduce((sum, r) => sum + Number(r.amount || 0), 0);
+  const healthKpis = document.getElementById('healthKpis');
+  if(healthKpis){
+    healthKpis.innerHTML = [
+      ['Completed', completedCount],
+      ['Pending', pendingCount],
+      ['Failed', failedCount],
+      ['Recent Revenue', `NPR ${totalAmount.toFixed(2)}`],
+    ].map(([k,v]) => `<li><span>${escapeHtml(k)}</span><strong>${escapeHtml(v)}</strong></li>`).join('');
+  }
+
+  const sparkSvg = document.getElementById('sparkSvg');
+  if(sparkSvg){
+    const amounts = recent.map(r => Number(r.amount || 0));
+    const weights = recent.map(r => {
+      const st = String(r.payment_status || '').toLowerCase();
+      if(st === 'completed') return 3;
+      if(st === 'pending') return 2;
+      return 1;
+    });
+
+    const drawLine = (points, klass, fillKlass) => {
+      if(points.length < 2) return '';
+      const maxV = Math.max(...points, 1);
+      const minV = Math.min(...points, 0);
+      const span = Math.max(1, maxV - minV);
+      const w = 620;
+      const h = 210;
+      const pad = 12;
+      const stepX = (w - pad * 2) / Math.max(1, points.length - 1);
+
+      const coords = points.map((v, i) => {
+        const x = pad + i * stepX;
+        const norm = (v - minV) / span;
+        const y = h - pad - norm * (h - pad * 2);
+        return [x, y];
+      });
+
+      const d = coords.map((c, i) => `${i ? 'L' : 'M'} ${c[0].toFixed(2)} ${c[1].toFixed(2)}`).join(' ');
+      const area = `${d} L ${(w - pad).toFixed(2)} ${(h - pad).toFixed(2)} L ${pad.toFixed(2)} ${(h - pad).toFixed(2)} Z`;
+      return `<path class="${fillKlass}" d="${area}"></path><path class="${klass}" d="${d}"></path>`;
+    };
+
+    sparkSvg.innerHTML = `${drawLine(amounts, 'line-a', 'fill-a')}${drawLine(weights, 'line-b', 'fill-b')}`;
+  }
+
+  const rows = recent.map(r => `<tr>
+    <td>${escapeHtml(r.booking_id)}</td>
+    <td>${escapeHtml(r.customer)}</td>
+    <td>${escapeHtml(r.hotel)}</td>
+    <td>NPR ${escapeHtml(r.amount)}</td>
+    <td>${statusBadge(r.payment_status)}</td>
+    <td>${escapeHtml(r.date)}</td>
+  </tr>`);
+  document.getElementById('recentBookingsTable').innerHTML = buildTable(['Booking','Customer','Hotel','Amount','Status','Date'], rows);
+}
+
+async function loadModel(tab){
+  currentTab = tab;
+  const endpoint = `/admin/api/${tab}/`;
+  dataTable.innerHTML = `<thead><tr><th>Loading...</th></tr></thead><tbody><tr><td class="muted">Fetching ${escapeHtml(prettyTabName(tab))} records...</td></tr></tbody>`;
+
+  let payload;
+  try {
+    payload = await getJson(endpoint);
+  } catch (error) {
+    dataTable.innerHTML = `<thead><tr><th>${escapeHtml(prettyTabName(tab))}</th></tr></thead><tbody><tr><td class="muted">Unable to load ${escapeHtml(prettyTabName(tab))}. ${escapeHtml(error.message || 'Please try again.')}</td></tr></tbody>`;
+    return;
+  }
+
+  const rows = payload.rows || [];
+
+  let headers = [];
+  let htmlRows = [];
+
+  if(tab === 'hotels'){
+    headers = ['ID','Name','Location','Status','Featured','Agent','Created','Actions'];
+    htmlRows = rows.map(r => `<tr><td>${r.id}</td><td>${escapeHtml(r.name)}</td><td>${escapeHtml(r.location)}</td><td>${escapeHtml(r.status)}</td><td>${r.featured ? 'Yes' : 'No'}</td><td>${escapeHtml(r.agent)}</td><td>${escapeHtml(r.created_at)}</td><td>${actionButtons('hotels', r.id, encodeURIComponent(JSON.stringify(r)))}</td></tr>`);
+  } else if(tab === 'rooms'){
+    headers = ['ID','Room','Hotel','Room Type','Price','Available','Date','Actions'];
+    htmlRows = rows.map(r => `<tr><td>${r.id}</td><td>${escapeHtml(r.room_number)}</td><td>${escapeHtml(r.hotel)}</td><td>${escapeHtml(r.room_type)}</td><td>NPR ${escapeHtml(r.price)}</td><td>${r.availability ? 'Yes':'No'}</td><td>${escapeHtml(r.date)}</td><td>${actionButtons('rooms', r.id, encodeURIComponent(JSON.stringify(r)))}</td></tr>`);
+  } else if(tab === 'room-types'){
+    headers = ['ID','Name','Hotel','Price','Beds','Date','Actions'];
+    htmlRows = rows.map(r => `<tr><td>${r.id}</td><td>${escapeHtml(r.name)}</td><td>${escapeHtml(r.hotel)}</td><td>NPR ${escapeHtml(r.price)}</td><td>${r.beds}</td><td>${escapeHtml(r.date)}</td><td>${actionButtons('room-types', r.id, encodeURIComponent(JSON.stringify(r)))}</td></tr>`);
+  } else if(tab === 'bookings'){
+    headers = ['ID','Booking','Customer','Hotel','Room','Amount','Status','Check In','Check Out','Actions'];
+    htmlRows = rows.map(r => `<tr><td>${r.id}</td><td>${escapeHtml(r.booking_id)}</td><td>${escapeHtml(r.customer)}</td><td>${escapeHtml(r.hotel)}</td><td>${escapeHtml(r.room)}</td><td>NPR ${escapeHtml(r.total_price)}</td><td>${statusBadge(r.payment_status)}</td><td>${escapeHtml(r.check_in)}</td><td>${escapeHtml(r.check_out)}</td><td>${actionButtons('bookings', r.id, encodeURIComponent(JSON.stringify(r)))}</td></tr>`);
+  } else if(tab === 'users'){
+    headers = ['ID','Username','Email','Role','Agent Status','Agent Document','Joined','Actions'];
+    htmlRows = rows.map(r => {
+      const extra = r.role === 'agent' ? `<button class="btn primary" data-approve="${r.id}">Approve</button><button class="btn" data-reject="${r.id}">Reject</button>` : '';
+      const docCell = r.agent_document_url
+        ? `<a class="btn" href="${escapeHtml(r.agent_document_url)}" target="_blank" rel="noopener">View ID</a>`
+        : `<span class="muted">-</span>`;
+      return `<tr><td>${r.id}</td><td>${escapeHtml(r.username)}</td><td>${escapeHtml(r.email)}</td><td>${escapeHtml(r.role)}</td><td>${escapeHtml(r.agent_approval_status)}</td><td>${docCell}</td><td>${escapeHtml(r.date_joined)}</td><td>${extra}${actionButtons('users', r.id, encodeURIComponent(JSON.stringify(r)))}</td></tr>`;
+    });
+  } else if(tab === 'messages'){
+    headers = ['ID','Name','Email','Subject','Message','Read','By User','Created','Actions'];
+    htmlRows = rows.map(r => `<tr><td>${r.id}</td><td>${escapeHtml(r.name)}</td><td>${escapeHtml(r.email)}</td><td>${escapeHtml(r.subject)}</td><td>${escapeHtml(r.message)}</td><td>${r.is_read ? 'Yes' : 'No'}</td><td>${escapeHtml(r.user)}</td><td>${escapeHtml(r.created_at)}</td><td>${actionButtons('messages', r.id, encodeURIComponent(JSON.stringify(r)))}</td></tr>`);
+  } else if(tab === 'reviews'){
+    headers = ['ID','Hotel','Customer','Agent','Rating','Comment','Created','Actions'];
+    htmlRows = rows.map(r => `<tr><td>${r.id}</td><td>${escapeHtml(r.hotel)}</td><td>${escapeHtml(r.customer)}</td><td>${escapeHtml(r.agent)}</td><td>${escapeHtml(r.rating)}/5</td><td>${escapeHtml(r.comment)}</td><td>${escapeHtml(r.created_at)}</td><td>${actionButtons('reviews', r.id, encodeURIComponent(JSON.stringify(r)))}</td></tr>`);
+  }
+
+  if(!headers.length){
+    dataTable.innerHTML = `<thead><tr><th>${escapeHtml(prettyTabName(tab))}</th></tr></thead><tbody><tr><td class="muted">No table configuration found for this section.</td></tr></tbody>`;
+    addRowBtn.style.display = tab === 'dashboard' ? 'none' : '';
+    return;
+  }
+
+  if(!htmlRows.length){
+    htmlRows = [`<tr><td colspan="${headers.length}" class="muted">No records found.</td></tr>`];
+  }
+
+  dataTable.innerHTML = buildTable(headers, htmlRows);
+  addRowBtn.style.display = tab === 'dashboard' ? 'none' : '';
+}
+
+async function postJson(url, body={}){
+  const res = await fetch(url, {method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+  if(!res.ok){
+    const t = await res.text();
+    throw new Error(t || 'Action failed');
+  }
+  return res.json();
+}
+
+async function saveObject(tab, id, fields, creating=false){
+  await postJson(`/admin/api/${tab}/save/`, {id, fields});
+  showFlash(`${creating ? 'Added' : 'Updated'} ${prettyTabName(tab)} successfully.`);
+  await loadModel(tab);
+}
+
+document.addEventListener('click', async (e) => {
+  const delBtn = e.target.closest('[data-delete]');
+  if(delBtn){
+    if(!confirm('Delete this item?')) return;
+    await postJson(`/admin/api/${delBtn.dataset.delete}/${delBtn.dataset.id}/delete/`);
+    showFlash(`Deleted ${prettyTabName(delBtn.dataset.delete)} successfully.`);
+    const active = document.querySelector('.tab.active')?.dataset.tab;
+    if(active === 'dashboard') loadDashboard(); else loadModel(active);
+    return;
+  }
+
+  const approveBtn = e.target.closest('[data-approve]');
+  if(approveBtn){
+    await postJson(`/admin/api/agents/${approveBtn.dataset.approve}/status/`, {status:'approved'});
+    showFlash('Agent approved successfully.');
+    loadModel('users');
+    return;
+  }
+
+  const rejectBtn = e.target.closest('[data-reject]');
+  if(rejectBtn){
+    await postJson(`/admin/api/agents/${rejectBtn.dataset.reject}/status/`, {status:'rejected', reason:'Rejected by admin'});
+    showFlash('Agent rejected successfully.');
+    loadModel('users');
+    return;
+  }
+
+  const editBtn = e.target.closest('[data-edit]');
+  if(editBtn){
+    const tab = editBtn.dataset.edit;
+    const id = Number(editBtn.dataset.id);
+    const row = JSON.parse(decodeURIComponent(editBtn.dataset.row || '%7B%7D'));
+    openCrudForm(tab, false, row, id);
+  }
+});
+
+addRowBtn.addEventListener('click', async () => {
+  if(currentTab === 'dashboard') return;
+  openCrudForm(currentTab, true, {}, null);
+});
+
+closeFormModalBtn.addEventListener('click', closeCrudForm);
+cancelFormBtn.addEventListener('click', closeCrudForm);
+
+formModalWrap.addEventListener('click', (e) => {
+  if(e.target === formModalWrap){
+    closeCrudForm();
+  }
+});
+
+crudForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if(!activeFormState){
+    return;
+  }
+
+  try {
+    const fields = readFormValues(activeFormState.tab, activeFormState.creating);
+    await saveObject(activeFormState.tab, activeFormState.id, fields, activeFormState.creating);
+    closeCrudForm();
+  } catch (error) {
+    crudFormError.textContent = error.message || 'Unable to save. Please check form values.';
+    showFlash(crudFormError.textContent, 'error');
+  }
+});
+
+tabs.forEach(tab => {
+  tab.addEventListener('click', async () => {
+    tabs.forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    const name = tab.dataset.tab;
+    currentTab = name;
+    title.textContent = name === 'dashboard' ? 'Dashboard' : name.replace('-', ' ').replace(/\b\w/g, c => c.toUpperCase());
+
+    if(name === 'dashboard'){
+      dashboardView.style.display = '';
+      tableView.style.display = 'none';
+      addRowBtn.style.display = 'none';
+      await loadDashboard();
+    } else {
+      dashboardView.style.display = 'none';
+      tableView.style.display = '';
+      tableTitle.textContent = title.textContent;
+      addRowBtn.style.display = '';
+      await loadModel(name);
+    }
+  });
+});
+
+const initialTab = new URLSearchParams(window.location.search).get('tab');
+if(initialTab){
+  const tabBtn = Array.from(tabs).find(t => t.dataset.tab === initialTab);
+  if(tabBtn){
+    tabBtn.click();
+  } else {
+    loadDashboard();
+  }
+} else {
+  loadDashboard();
+}
+</script>
+</body>
+</html>

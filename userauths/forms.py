@@ -6,13 +6,33 @@ from .models import Profile
 User = get_user_model()
 
 class UserRegistrationForm(forms.ModelForm):
+    GENDER_REGISTRATION_CHOICES = (
+        ("male", "Male"),
+        ("female", "Female"),
+        ("others", "Others"),
+    )
+
     password = forms.CharField(widget=forms.PasswordInput)
     password2 = forms.CharField(widget=forms.PasswordInput, label="Confirm Password")
     agent_document_photo = forms.ImageField(required=False)
+    gender = forms.ChoiceField(choices=GENDER_REGISTRATION_CHOICES)
 
     class Meta:
         model = User
         fields = ["full_name", "username", "email", "phone", "gender", "role"]
+
+    def clean_gender(self):
+        gender = (self.cleaned_data.get("gender") or "").strip()
+        normalized = gender.lower()
+
+        if normalized == "female":
+            return "Female"
+        if normalized == "male":
+            return "Male"
+        if normalized in {"other", "others"}:
+            return "Others"
+
+        return "Others"
 
     def clean_password2(self):
         password = self.cleaned_data.get("password")

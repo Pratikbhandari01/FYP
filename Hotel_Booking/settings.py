@@ -236,7 +236,12 @@ _email_defaults = _EMAIL_PROVIDER_DEFAULTS.get(EMAIL_PROVIDER, _EMAIL_PROVIDER_D
 EMAIL_HOST = os.getenv('EMAIL_HOST', _email_defaults['host']).strip()
 EMAIL_PORT = _to_int(os.getenv('EMAIL_PORT'), _email_defaults['port'])
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', _email_defaults.get('user', '')).strip()
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', os.getenv('SMTP_MAIL', '')).strip()
+if not EMAIL_HOST_USER:
+    EMAIL_HOST_USER = os.getenv('SMTP_USER', '').strip()
+
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '').strip()
+if not EMAIL_HOST_PASSWORD:
+    EMAIL_HOST_PASSWORD = os.getenv('SMTP_MAIL', '').strip()
 EMAIL_USE_TLS = _to_bool(os.getenv('EMAIL_USE_TLS'), _email_defaults.get('tls', True))
 EMAIL_USE_SSL = _to_bool(os.getenv('EMAIL_USE_SSL'), False)
 if EMAIL_USE_SSL:

@@ -91,6 +91,28 @@
         margin-bottom: 1.25rem;
         background: #e2e8f0;
     }
+    .booking-price-preview {
+        margin-top: 1.5rem;
+        padding: 1rem 1.1rem;
+        border: 1px solid #dbeafe;
+        background: #eff6ff;
+        border-radius: 1rem;
+    }
+    .booking-price-preview .price-line {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        color: #334155;
+        font-weight: 600;
+    }
+    .booking-price-preview .price-total {
+        margin-top: 0.35rem;
+        font-size: 1.2rem;
+        color: #1d4ed8;
+        font-weight: 800;
+        text-align: right;
+    }
 </style>
 {% endblock %}
 
@@ -177,11 +199,11 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label" for="check_in">Check-in</label>
-                                <input id="check_in" class="form-control" type="date" name="check_in" required>
+                                <input id="check_in" class="form-control" type="date" name="check_in" min="{{ today|date:'Y-m-d' }}" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label" for="check_out">Check-out</label>
-                                <input id="check_out" class="form-control" type="date" name="check_out" required>
+                                <input id="check_out" class="form-control" type="date" name="check_out" min="{{ today|date:'Y-m-d' }}" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label" for="guests">Guests</label>
@@ -194,6 +216,14 @@
                             </div>
                         </div>
 
+                        <div class="booking-price-preview" aria-live="polite">
+                            <div class="price-line">
+                                <span id="nightCountLabel">Select dates to see total</span>
+                                <span id="nightlyRateLabel">NPR {{ room.price }} / night</span>
+                            </div>
+                            <div class="price-total" id="totalPriceLabel">NPR 0.00</div>
+                        </div>
+
                         <div class="mt-4 d-flex flex-column flex-sm-row gap-3">
                             <button type="submit" class="btn btn-primary btn-lg">Proceed to Khalti Payment</button>
                             <a href="{% url 'hotel:rooms' %}" class="btn btn-outline-secondary btn-lg">Cancel</a>
@@ -204,4 +234,83 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var checkInInput = document.getElementById('check_in');
+    var checkOutInput = document.getElementById('check_out');
+    var nightCountLabel = document.getElementById('nightCountLabel');
+    var totalPriceLabel = document.getElementById('totalPriceLabel');
+    var roomNightPrice = Number('{{ room.price|floatformat:2 }}');
+
+    if (!checkInInput || !checkOutInput || !nightCountLabel || !totalPriceLabel || Number.isNaN(roomNightPrice)) {
+        return;
+    }
+
+    function formatDate(dateObj) {
+        var year = dateObj.getFullYear();
+        var month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        var day = String(dateObj.getDate()).padStart(2, '0');
+        return year + '-' + month + '-' + day;
+    }
+
+    function addOneDay(dateString) {
+        if (!dateString) {
+            return '';
+        }
+        var dateObj = new Date(dateString + 'T00:00:00');
+        if (Number.isNaN(dateObj.getTime())) {
+            return '';
+        }
+        dateObj.setDate(dateObj.getDate() + 1);
+        return formatDate(dateObj);
+    }
+
+    function updatePricePreview() {
+        if (!checkInInput.value || !checkOutInput.value) {
+            nightCountLabel.textContent = 'Select dates to see total';
+            totalPriceLabel.textContent = 'NPR 0.00';
+            return;
+        }
+
+        var checkInDate = new Date(checkInInput.value + 'T00:00:00');
+        var checkOutDate = new Date(checkOutInput.value + 'T00:00:00');
+        var millis = checkOutDate.getTime() - checkInDate.getTime();
+        var nights = Math.floor(millis / (1000 * 60 * 60 * 24));
+
+        if (!Number.isFinite(nights) || nights <= 0) {
+            nightCountLabel.textContent = 'Check-out must be after check-in';
+            totalPriceLabel.textContent = 'NPR 0.00';
+            return;
+        }
+
+        var total = roomNightPrice * nights;
+        var nightWord = nights === 1 ? 'night' : 'nights';
+        nightCountLabel.textContent = nights + ' ' + nightWord + ' selected';
+        totalPriceLabel.textContent = 'NPR ' + total.toFixed(2);
+    }
+
+    function syncCheckoutMin() {
+        var todayMin = checkInInput.getAttribute('min') || '';
+        var selectedCheckIn = checkInInput.value || '';
+        var minDate = selectedCheckIn ? addOneDay(selectedCheckIn) : addOneDay(todayMin);
+
+        if (minDate) {
+            checkOutInput.min = minDate;
+        }
+
+        if (checkOutInput.value && checkOutInput.min && checkOutInput.value < checkOutInput.min) {
+            checkOutInput.value = '';
+        }
+
+        updatePricePreview();
+    }
+
+    checkOutInput.addEventListener('change', updatePricePreview);
+    checkInInput.addEventListener('change', syncCheckoutMin);
+    syncCheckoutMin();
+});
+</script>
 {% endblock %}

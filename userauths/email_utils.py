@@ -1,4 +1,5 @@
 import logging
+import random
 
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
@@ -79,4 +80,36 @@ def send_agent_approved_email(user) -> bool:
         return True
     except Exception:
         logger.exception("Failed to send agent approval email to user_id=%s", user.pk)
+        return False
+
+
+def generate_login_otp(length: int = 6) -> str:
+    length = max(4, int(length or 6))
+    return ''.join(random.choices('0123456789', k=length))
+
+
+def send_login_otp_email(user, otp_code: str) -> bool:
+    if not user or not user.email:
+        return False
+
+    subject = "Your NepStay login OTP"
+    message = (
+        f"Hi {user.full_name or user.username},\n\n"
+        "Use the OTP below to complete your NepStay login:\n"
+        f"{otp_code}\n\n"
+        "This OTP expires in 10 minutes.\n"
+        "If you did not attempt to login, please ignore this email and consider changing your password.\n"
+    )
+
+    try:
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            fail_silently=False,
+        )
+        return True
+    except Exception:
+        logger.exception("Failed to send login OTP email to user_id=%s", user.pk)
         return False

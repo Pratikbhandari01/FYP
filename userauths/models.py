@@ -8,6 +8,8 @@ from django.db.models.signals import post_save
 GENDER_CHOICES = (
     ("Female", "Female"),
     ("Male", "Male"),
+    ("Other", "Other"),
+    ("other", "Other"),
     ("Others", "Others"),
 )
 

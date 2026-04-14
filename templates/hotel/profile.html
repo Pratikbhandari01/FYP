@@ -111,7 +111,7 @@
 
         <!-- Account Settings -->
         <div class="row g-4 mt-4">
-            <div class="col-lg-6">
+            <div class="col-lg-12">
                 <div class="card">
                     <div class="card-header">
                         <i class="bi bi-shield-lock"></i> Security
@@ -120,45 +120,9 @@
                         <div class="mb-3">
                             <label class="form-label">Password</label>
                             <p class="text-muted small">Last changed: Not set</p>
-                            <button class="btn btn-outline-primary btn-sm">
+                            <a href="{% url 'userauths:change_password' %}" class="btn btn-outline-primary btn-sm">
                                 <i class="bi bi-key"></i> Change Password
-                            </button>
-                        </div>
-                        <hr>
-                        <div class="mb-0">
-                            <label class="form-label">Two-Factor Authentication</label>
-                            <p class="text-muted small">Add an extra layer of security to your account</p>
-                            <button class="btn btn-outline-primary btn-sm">
-                                <i class="bi bi-shield-check"></i> Enable 2FA
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-6">
-                <div class="card">
-                    <div class="card-header">
-                        <i class="bi bi-bell"></i> Notifications
-                    </div>
-                    <div class="card-body">
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="checkbox" id="emailNotif" checked>
-                            <label class="form-check-label" for="emailNotif">
-                                Email Notifications
-                            </label>
-                        </div>
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="checkbox" id="smsNotif" checked>
-                            <label class="form-check-label" for="smsNotif">
-                                SMS Notifications
-                            </label>
-                        </div>
-                        <div class="form-check mb-0">
-                            <input class="form-check-input" type="checkbox" id="promotions" checked>
-                            <label class="form-check-label" for="promotions">
-                                Promotional Offers
-                            </label>
+                            </a>
                         </div>
                     </div>
                 </div>
