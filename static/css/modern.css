@@ -660,6 +660,22 @@ h6,
     color: #2b2d42 !important;
 }
 
+.btn-outline-success {
+    color: #15803d !important;
+}
+
+.btn-outline-info {
+    color: #0369a1 !important;
+}
+
+.btn-outline-warning {
+    color: #a16207 !important;
+}
+
+.btn-outline-danger {
+    color: #dc2626 !important;
+}
+
 .table,
 .table td,
 .table th,

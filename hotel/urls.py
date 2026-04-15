@@ -9,6 +9,7 @@ urlpatterns = [
     path('rooms/ajax/<int:hotel_id>/', views.rooms_by_hotel_ajax, name='rooms_by_hotel_ajax'),
     path('hotels/<int:hotel_id>/', views.hotel_detail, name='hotel_detail'),
     path('hotels/<int:hotel_id>/reviews/add/', views.add_review, name='add_review'),
+    path('hotels/<int:hotel_id>/reviews/delete/', views.delete_review, name='delete_review'),
     path('rooms/book/<int:room_id>/', views.book_room, name='book_room'),
     path('payment/khalti/callback/', views.khalti_payment_callback, name='khalti_payment_callback'),
     path('about/', views.about, name='about'),

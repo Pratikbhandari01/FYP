@@ -5,7 +5,7 @@ import requests
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db.models import Q
+from django.db.models import Exists, OuterRef, Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.generic import ListView
@@ -108,6 +108,7 @@ def hotel_detail(request, hotel_id):
     reviews = Review.objects.select_related('user').filter(hotel=hotel)
 
     review_form = None
+    existing_review = None
     if request.user.is_authenticated and request.user.role == 'customer':
         existing_review = Review.objects.filter(hotel=hotel, user=request.user).first()
         review_form = ReviewForm(instance=existing_review)
@@ -117,6 +118,7 @@ def hotel_detail(request, hotel_id):
         'rooms': rooms_qs,
         'reviews': reviews,
         'review_form': review_form,
+        'existing_review': existing_review,
     })
 
 
@@ -143,6 +145,24 @@ def add_review(request, hotel_id):
     else:
         messages.error(request, 'Please provide a valid rating and comment.')
 
+    return redirect('hotel:hotel_detail', hotel_id=hotel.id)
+
+
+@login_required
+@customer_required
+def delete_review(request, hotel_id):
+    hotel = get_object_or_404(Hotel, id=hotel_id)
+
+    if request.method != 'POST':
+        return redirect('hotel:hotel_detail', hotel_id=hotel.id)
+
+    review = Review.objects.filter(hotel=hotel, user=request.user).first()
+    if not review:
+        messages.error(request, 'You do not have a review to delete for this hotel.')
+        return redirect('hotel:hotel_detail', hotel_id=hotel.id)
+
+    review.delete()
+    messages.success(request, 'Your review has been deleted.')
     return redirect('hotel:hotel_detail', hotel_id=hotel.id)
 
 
@@ -457,9 +477,19 @@ class DeleteHotelView(DeleteView):
 @login_required
 @customer_required
 def customer_bookings(request):
+    completed_match = Booking.objects.filter(
+        customer_id=request.user.id,
+        room_id=OuterRef('room_id'),
+        check_in=OuterRef('check_in'),
+        check_out=OuterRef('check_out'),
+        payment_status='completed',
+    )
+
     bookings = (
         Booking.objects.select_related('hotel', 'room')
         .filter(customer_id=request.user.id)
+        .annotate(has_completed_match=Exists(completed_match))
+        .exclude(payment_status='pending', has_completed_match=True)
         .order_by('-date')
     )
     return render(request, 'hotel/customer_bookings.html', {'bookings': bookings})

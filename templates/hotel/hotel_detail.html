@@ -143,6 +143,12 @@
         font-size: 0.84rem;
     }
 
+    .review-owner-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
     @media (max-width: 767.98px) {
         .detail-hero {
             margin-top: 1rem;
@@ -237,8 +243,10 @@
 
                     {% if request.user.is_authenticated and request.user.role == 'customer' and review_form %}
                     <hr>
-                    <h4 class="h6">Write your review</h4>
-                    <form method="POST" action="{% url 'hotel:add_review' hotel.id %}">
+                    <h4 class="h6" id="review-form-heading">
+                        {% if existing_review %}Edit your review{% else %}Write your review{% endif %}
+                    </h4>
+                    <form method="POST" action="{% url 'hotel:add_review' hotel.id %}" id="review-form">
                         {% csrf_token %}
                         <div class="mb-2">
                             <label class="form-label" for="id_rating">Rating</label>
@@ -248,8 +256,16 @@
                             <label class="form-label" for="id_comment">Comment</label>
                             {{ review_form.comment }}
                         </div>
-                        <button type="submit" class="btn btn-primary w-100">Submit Review</button>
+                        <button type="submit" class="btn btn-primary w-100">
+                            {% if existing_review %}Update Review{% else %}Submit Review{% endif %}
+                        </button>
                     </form>
+                    {% if existing_review %}
+                    <form method="POST" action="{% url 'hotel:delete_review' hotel.id %}" class="mt-2" onsubmit="return confirm('Delete your review for this hotel?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger w-100">Delete My Review</button>
+                    </form>
+                    {% endif %}
                     {% elif request.user.is_authenticated and request.user.role == 'agent' %}
                     <p class="text-muted mt-3 mb-0">Agent accounts cannot submit reviews.</p>
                     {% else %}
@@ -275,6 +291,15 @@
                                 <i class="bi {% if review.rating >= 5 %}bi-star-fill{% else %}bi-star star-off{% endif %}"></i>
                             </div>
                             <p class="mb-0 text-muted">{{ review.comment|default:'No comment provided.' }}</p>
+                            {% if request.user.is_authenticated and request.user == review.user %}
+                            <div class="review-owner-actions mt-3">
+                                <a href="#review-form-heading" class="btn btn-sm btn-outline-primary">Edit My Review</a>
+                                <form method="POST" action="{% url 'hotel:delete_review' hotel.id %}" onsubmit="return confirm('Delete your review for this hotel?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                </form>
+                            </div>
+                            {% endif %}
                         </article>
                     </div>
                     {% empty %}
