@@ -58,32 +58,7 @@
                 </article>
             </div>
 
-            <div class="agentdash-panels">
-                <section class="panel card-chart">
-                    <div class="panel-head">
-                        <h3>Reservation Activity</h3>
-                        <span>Last 7 days</span>
-                    </div>
-                    <canvas id="reservationTrend" height="220"></canvas>
-                </section>
-
-                <section class="panel card-gauge">
-                    <div class="panel-head">
-                        <h3>Booking Completion</h3>
-                    </div>
-                    <div class="gauge" style="--gauge: {{ completion_rate }}%;">
-                        <div class="gauge-center">
-                            <strong>{{ completion_rate }}%</strong>
-                            <span>Completed</span>
-                        </div>
-                    </div>
-                    <ul class="gauge-stats">
-                        <li><span>Total Bookings</span><strong>{{ total_bookings }}</strong></li>
-                        <li><span>Average Rating</span><strong>{{ average_rating_received }}/5</strong></li>
-                        <li><span>Total Reviews</span><strong>{{ received_reviews_count }}</strong></li>
-                    </ul>
-                </section>
-            </div>
+            <!-- Reservation Activity and Booking Completion panels removed as requested -->
 
             <div class="agentdash-panels lower">
                 <section class="panel hotels-panel">

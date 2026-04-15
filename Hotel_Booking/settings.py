@@ -29,7 +29,9 @@ def _load_env_file(env_path):
         key, value = line.split('=', 1)
         key = key.strip()
         value = value.strip().strip('"').strip("'")
-        os.environ.setdefault(key, value)
+        existing = os.environ.get(key)
+        if existing is None or str(existing).strip() == '':
+            os.environ[key] = value
 
 
 _load_env_file(BASE_DIR / '.env')
