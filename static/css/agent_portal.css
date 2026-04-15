@@ -127,6 +127,23 @@ body {
     font-size: 0.85rem;
 }
 
+/* Keep action button labels visible in agent hotel cards */
+.agent-panel .btn-outline-warning {
+    color: #a16207 !important;
+}
+
+.agent-panel .btn-outline-success {
+    color: #15803d !important;
+}
+
+.agent-panel .btn-outline-primary {
+    color: #1d4ed8 !important;
+}
+
+.agent-panel .btn-outline-danger {
+    color: #dc2626 !important;
+}
+
 @media (max-width: 992px) {
     .agent-stat-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -273,7 +290,9 @@ body {
 .kpi-card {
     border-radius: 0.9rem;
     padding: 0.8rem;
-    color: #fff;
+    color: #0f172a;
+    background: #f8fafc;
+    border: 1px solid rgba(148, 163, 184, 0.35);
     box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
 }
 
@@ -289,10 +308,12 @@ body {
     font-size: 1.8rem;
 }
 
-.kpi-card.blue { background: linear-gradient(130deg, #38bdf8, #2563eb); }
-.kpi-card.green { background: linear-gradient(130deg, #4ade80, #14b8a6); }
-.kpi-card.yellow { background: linear-gradient(130deg, #facc15, #f59e0b); }
-.kpi-card.orange { background: linear-gradient(130deg, #fb923c, #f97316); }
+.kpi-card.blue,
+.kpi-card.green,
+.kpi-card.yellow,
+.kpi-card.orange {
+    background: #f8fafc;
+}
 
 .agentdash-panels {
     display: grid;

@@ -38,7 +38,23 @@ a {
 }
 
 button, .btn {
-    transition: all .2s ease;
+    transition: none;
+}
+
+/* Keep button styles constant across all states */
+.btn:hover,
+.btn:focus,
+.btn:active,
+button:hover,
+button:focus,
+button:active {
+    color: var(--bs-btn-color);
+    background-color: var(--bs-btn-bg);
+    border-color: var(--bs-btn-border-color);
+    box-shadow: none;
+    filter: none;
+    transform: none;
+    opacity: 1;
 }
 
 .navbar {
@@ -71,7 +87,7 @@ button, .btn {
 
 .btn-signin:hover,
 .btn-primary:hover {
-    filter: brightness(1.05);
+    filter: none;
 }
 
 .hero {
@@ -559,7 +575,7 @@ h1, h2, h3, h4, h5, h6, .section-title {
 }
 
 .btn-primary:hover {
-    filter: brightness(1.05);
+    filter: none;
 }
 
 .form-control,

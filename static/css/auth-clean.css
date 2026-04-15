@@ -134,7 +134,7 @@ body.auth-page {
 }
 
 .auth-btn:hover {
-    background: var(--auth-accent-hover);
+    background: var(--auth-accent);
 }
 
 .auth-link-row {

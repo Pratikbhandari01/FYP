@@ -16,8 +16,9 @@
     .brand { font-family:'Space Grotesk',sans-serif; font-size:28px; font-weight:700; margin:0 0 14px; }
     .brand span { display:block; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
     .menu { display:grid; gap:8px; position:relative; }
-    .menu button, .menu a { text-align:left; border:1px solid #c9d9eb; background:#fff; color:#284760; border-radius:12px; padding:11px 13px; font-weight:700; text-decoration:none; cursor:pointer; transition:.22s ease; position:relative; z-index:1; }
-    .menu button.active, .menu button:hover, .menu a:hover { background:#eaf4ff; border-color:#9ec2e7; color:#1e4f78; transform:translateY(-1px); }
+    .menu button, .menu a { text-align:left; border:1px solid #c9d9eb; background:#fff; color:#284760; border-radius:12px; padding:11px 13px; font-weight:700; text-decoration:none; cursor:pointer; transition:none; position:relative; z-index:1; }
+    .menu button.active { background:#eaf4ff; border-color:#9ec2e7; color:#1e4f78; }
+    .menu button:hover, .menu a:hover { background:#fff; border-color:#c9d9eb; color:#284760; transform:none; }
     .content { padding:18px; display:grid; gap:12px; }
     .top { border:1px solid var(--border); border-radius:16px; background:linear-gradient(120deg,#ffffff,#ebf4ff,#e9fbf2); padding:16px 18px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 16px 28px rgba(30,58,138,.08); }
     .top h1 { margin:0; font-size:32px; }
