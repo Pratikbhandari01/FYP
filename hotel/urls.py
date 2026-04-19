@@ -21,6 +21,7 @@ urlpatterns = [
     path('api/room-types/', views.room_types_api, name='room_types_api'),
     # Agent hotel management
     path('agent/hotels/', views.AgentHotelListView.as_view(), name='agent_hotel_list'),
+    path('agent/bookings/', views.agent_bookings, name='agent_bookings'),
     path('agent/hotels/create/', views.CreateHotelView.as_view(), name='create_hotel'),
     path('agent/hotels/<int:pk>/update/', views.UpdateHotelView.as_view(), name='update_hotel'),
     path('agent/hotels/<int:pk>/delete/', views.DeleteHotelView.as_view(), name='delete_hotel'),

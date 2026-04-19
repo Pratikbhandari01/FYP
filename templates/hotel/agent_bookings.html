@@ -1,0 +1,101 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}Agent Bookings | NepStay{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/agent_portal.css' %}">
+<style>
+    .agent-bookings-table th,
+    .agent-bookings-table td {
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    .agent-booking-status {
+        border-radius: 999px;
+        padding: 0.24rem 0.62rem;
+        font-size: 0.74rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .agent-booking-status.pending {
+        background: #fff7ed;
+        color: #9a3412;
+    }
+
+    .agent-booking-status.paid {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .agent-booking-status.cancelled {
+        background: #e5e7eb;
+        color: #4b5563;
+    }
+
+    .agent-bookings-empty {
+        margin: 0;
+        color: #64748b;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="container agent-shell">
+    <div class="agent-hero d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h2>Customer Bookings</h2>
+            <p class="mb-0 mt-1">Bookings made by customers for your hotels.</p>
+        </div>
+    </div>
+
+    <div class="agent-panel p-3 p-lg-4">
+        {% if bookings %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 agent-bookings-table">
+                <thead>
+                    <tr>
+                        <th>Hotel</th>
+                        <th>Room</th>
+                        <th>Customer</th>
+                        <th>Check In</th>
+                        <th>Check Out</th>
+                        <th>Guests</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Booked On</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in bookings %}
+                    <tr>
+                        <td>{{ booking.hotel.name }}</td>
+                        <td>{{ booking.room.room_number }}</td>
+                        <td>
+                            {{ booking.full_name }}<br>
+                            <small class="text-secondary">{{ booking.email }}</small>
+                        </td>
+                        <td>{{ booking.check_in|date:'M d, Y' }}</td>
+                        <td>{{ booking.check_out|date:'M d, Y' }}</td>
+                        <td>{{ booking.guests }}</td>
+                        <td>NPR {{ booking.total_price }}</td>
+                        <td>
+                            <span class="agent-booking-status {{ booking.booking_status|lower }}">
+                                {{ booking.booking_status|capfirst }}
+                            </span>
+                        </td>
+                        <td>{{ booking.date|date:'M d, Y H:i' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="agent-bookings-empty">No customer bookings yet for your hotels.</p>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

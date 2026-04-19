@@ -30,7 +30,7 @@
     .stat.green { background:linear-gradient(135deg,#37d996 0,#12a286 100%); }
     .stat.amber { background:linear-gradient(135deg,#ffc55a 0,#f59d3d 100%); }
     .stat.coral { background:linear-gradient(135deg,#ff9876 0,#ff7043 100%); }
-    .dash-grid { display:grid; grid-template-columns:1.15fr 2fr; gap:10px; margin-top:10px; }
+    .dash-grid { display:grid; grid-template-columns:1fr; gap:10px; margin-top:10px; }
     .panel { border:1px solid var(--border); border-radius:14px; background:#fff; padding:12px; box-shadow:0 10px 18px rgba(30,58,138,.06); }
     .panel-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
     .panel-head h3{margin:0;font-size:20px}
@@ -155,17 +155,6 @@
               <div class="ring" id="bookingRing" style="--p:0;"><div><strong id="completionPct">0%</strong><span>Completed</span></div></div>
             </div>
             <ul class="kpis" id="healthKpis"></ul>
-          </div>
-
-          <div class="panel">
-            <div class="panel-head"><h3>Reservation Activity</h3><span class="muted">Recent bookings</span></div>
-            <div class="sparkline">
-              <svg id="sparkSvg" viewBox="0 0 620 210" preserveAspectRatio="none"></svg>
-            </div>
-            <div class="spark-meta">
-              <span><i class="dot a"></i>Booking Amount</span>
-              <span><i class="dot b"></i>Status Weight</span>
-            </div>
           </div>
         </div>
 

@@ -667,6 +667,17 @@ def customer_bookings(request):
 
 @login_required
 @agent_required
+def agent_bookings(request):
+    bookings = (
+        Booking.objects.select_related('hotel', 'room', 'customer')
+        .filter(hotel__agent=request.user)
+        .order_by('-date')
+    )
+    return render(request, 'hotel/agent_bookings.html', {'bookings': bookings})
+
+
+@login_required
+@agent_required
 def add_room(request, hotel_id):
     hotel = get_object_or_404(Hotel, id=hotel_id, agent=request.user)
     room_type_queryset = RoomType.objects.filter(hotel=hotel)
