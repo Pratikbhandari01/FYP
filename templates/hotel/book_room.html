@@ -162,6 +162,22 @@
                     <strong>NPR {{ room.price }}</strong>
                 </div>
                 <div class="detail-item">
+                    <span>Check-in</span>
+                    <strong id="summaryCheckIn">-</strong>
+                </div>
+                <div class="detail-item">
+                    <span>Check-out</span>
+                    <strong id="summaryCheckOut">-</strong>
+                </div>
+                <div class="detail-item">
+                    <span>Guests</span>
+                    <strong id="summaryGuests">1</strong>
+                </div>
+                <div class="detail-item">
+                    <span>Total Amount</span>
+                    <strong id="summaryTotal">NPR 0.00</strong>
+                </div>
+                <div class="detail-item">
                     <span>Status</span>
                     {% if room.availability %}
                         <span class="badge bg-success bg-opacity-10 text-success badge-status">Available</span>
@@ -187,31 +203,33 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label" for="full_name">Full Name</label>
-                                <input id="full_name" class="form-control" type="text" name="full_name" value="{{ request.user.get_full_name|default:request.user.username }}" required>
+                                <input id="full_name" class="form-control" type="text" name="full_name" value="{{ form_values.full_name }}" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label" for="email">Email</label>
-                                <input id="email" class="form-control" type="email" name="email" value="{{ request.user.email }}" required>
+                                <input id="email" class="form-control" type="email" name="email" value="{{ form_values.email }}" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label" for="phone">Phone</label>
-                                <input id="phone" class="form-control" type="tel" name="phone" placeholder="Enter phone number" required>
+                                <input id="phone" class="form-control" type="tel" name="phone" value="{{ form_values.phone }}" placeholder="Enter phone number" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label" for="check_in">Check-in</label>
-                                <input id="check_in" class="form-control" type="date" name="check_in" min="{{ today|date:'Y-m-d' }}" required>
+                                <input id="check_in" class="form-control" type="date" name="check_in" value="{{ form_values.check_in }}" min="{{ today|date:'Y-m-d' }}" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label" for="check_out">Check-out</label>
-                                <input id="check_out" class="form-control" type="date" name="check_out" min="{{ today|date:'Y-m-d' }}" required>
+                                <input id="check_out" class="form-control" type="date" name="check_out" value="{{ form_values.check_out }}" min="{{ today|date:'Y-m-d' }}" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label" for="guests">Guests</label>
                                 <select id="guests" class="form-select" name="guests">
-                                    <option value="1">1 Guest</option>
-                                    <option value="2">2 Guests</option>
-                                    <option value="3">3 Guests</option>
-                                    <option value="4">4 Guests</option>
+                                    <option value="1" {% if form_values.guests == '1' %}selected{% endif %}>1 Guest</option>
+                                    <option value="2" {% if form_values.guests == '2' %}selected{% endif %}>2 Guests</option>
+                                    <option value="3" {% if form_values.guests == '3' %}selected{% endif %}>3 Guests</option>
+                                    <option value="4" {% if form_values.guests == '4' %}selected{% endif %}>4 Guests</option>
+                                    <option value="5" {% if form_values.guests == '5' %}selected{% endif %}>5 Guests</option>
+                                    <option value="6" {% if form_values.guests == '6' %}selected{% endif %}>6 Guests</option>
                                 </select>
                             </div>
                         </div>
@@ -225,8 +243,8 @@
                         </div>
 
                         <div class="mt-4 d-flex flex-column flex-sm-row gap-3">
-                            <button type="submit" class="btn btn-primary btn-lg">Proceed to Khalti Payment</button>
-                            <a href="{% url 'hotel:rooms' %}" class="btn btn-outline-secondary btn-lg">Cancel</a>
+                            <button type="submit" class="btn btn-primary btn-lg">Proceed to Payment</button>
+                            <a href="{% url 'hotel:rooms' %}" class="btn btn-outline-secondary btn-lg">Cancel Booking</a>
                         </div>
                     </form>
                 </div>
@@ -243,9 +261,14 @@ document.addEventListener('DOMContentLoaded', function () {
     var checkOutInput = document.getElementById('check_out');
     var nightCountLabel = document.getElementById('nightCountLabel');
     var totalPriceLabel = document.getElementById('totalPriceLabel');
+    var summaryCheckIn = document.getElementById('summaryCheckIn');
+    var summaryCheckOut = document.getElementById('summaryCheckOut');
+    var summaryGuests = document.getElementById('summaryGuests');
+    var summaryTotal = document.getElementById('summaryTotal');
+    var guestsInput = document.getElementById('guests');
     var roomNightPrice = Number('{{ room.price|floatformat:2 }}');
 
-    if (!checkInInput || !checkOutInput || !nightCountLabel || !totalPriceLabel || Number.isNaN(roomNightPrice)) {
+    if (!checkInInput || !checkOutInput || !nightCountLabel || !totalPriceLabel || !summaryCheckIn || !summaryCheckOut || !summaryGuests || !summaryTotal || !guestsInput || Number.isNaN(roomNightPrice)) {
         return;
     }
 
@@ -269,9 +292,14 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function updatePricePreview() {
+        summaryCheckIn.textContent = checkInInput.value || '-';
+        summaryCheckOut.textContent = checkOutInput.value || '-';
+        summaryGuests.textContent = guestsInput.value || '1';
+
         if (!checkInInput.value || !checkOutInput.value) {
             nightCountLabel.textContent = 'Select dates to see total';
             totalPriceLabel.textContent = 'NPR 0.00';
+            summaryTotal.textContent = 'NPR 0.00';
             return;
         }
 
@@ -283,6 +311,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!Number.isFinite(nights) || nights <= 0) {
             nightCountLabel.textContent = 'Check-out must be after check-in';
             totalPriceLabel.textContent = 'NPR 0.00';
+            summaryTotal.textContent = 'NPR 0.00';
             return;
         }
 
@@ -290,6 +319,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var nightWord = nights === 1 ? 'night' : 'nights';
         nightCountLabel.textContent = nights + ' ' + nightWord + ' selected';
         totalPriceLabel.textContent = 'NPR ' + total.toFixed(2);
+        summaryTotal.textContent = 'NPR ' + total.toFixed(2);
     }
 
     function syncCheckoutMin() {
@@ -310,6 +340,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     checkOutInput.addEventListener('change', updatePricePreview);
     checkInInput.addEventListener('change', syncCheckoutMin);
+    guestsInput.addEventListener('change', updatePricePreview);
     syncCheckoutMin();
 });
 </script>

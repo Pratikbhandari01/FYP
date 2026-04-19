@@ -2,7 +2,7 @@ from django.contrib import admin
 from django import forms
 from django.urls import reverse
 from django.utils.html import format_html
-from .models import Booking, ContactMessage, Hotel, Review, RoomType, Room
+from .models import Booking, ContactMessage, Hotel, Payment, Review, RoomType, Room
 from .notifications import send_booking_notification_email
 
 
@@ -162,15 +162,15 @@ class RoomAdmin(admin.ModelAdmin):
 
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
-    list_display = ['booking_id', 'customer', 'hotel', 'room', 'check_in', 'check_out', 'total_price', 'payment_status', 'is_active', 'manage_actions']
-    list_filter = ['payment_status', 'is_active', 'check_in', 'check_out']
+    list_display = ['booking_id', 'customer', 'hotel', 'room', 'check_in', 'check_out', 'guests', 'booking_status', 'payment_status', 'total_price', 'is_active', 'manage_actions']
+    list_filter = ['booking_status', 'payment_status', 'is_active', 'check_in', 'check_out']
     search_fields = ['booking_id', 'customer__username', 'hotel__name', 'room__room_number']
     readonly_fields = ['booking_id', 'date']
     list_per_page = 25
     ordering = ['-date']
     fieldsets = (
         (None, {
-            'fields': ('customer', 'full_name', 'email', 'Phone', 'hotel', 'room_type', 'room', 'check_in', 'check_out', 'total_price', 'total_days', 'payment_status', 'is_active', 'booking_id')
+            'fields': ('customer', 'full_name', 'email', 'Phone', 'hotel', 'room_type', 'room', 'check_in', 'check_out', 'guests', 'total_price', 'total_days', 'booking_status', 'payment_status', 'is_active', 'booking_id')
         }),
     )
     actions = ['mark_completed', 'mark_pending', 'mark_failed']
@@ -180,6 +180,14 @@ class BookingAdmin(admin.ModelAdmin):
         if change and obj.pk:
             previous = Booking.objects.filter(pk=obj.pk).only('payment_status').first()
             previous_status = previous.payment_status if previous else None
+
+        if obj.payment_status == 'completed':
+            obj.booking_status = 'paid'
+        elif obj.payment_status == 'cancelled':
+            obj.booking_status = 'cancelled'
+        else:
+            obj.booking_status = 'pending'
+
         super().save_model(request, obj, form, change)
         if previous_status and previous_status != obj.payment_status:
             send_booking_notification_email(obj, 'payment_status_changed', previous_status=previous_status)
@@ -191,7 +199,8 @@ class BookingAdmin(admin.ModelAdmin):
             if old_status == 'completed':
                 continue
             booking.payment_status = 'completed'
-            booking.save(update_fields=['payment_status'])
+            booking.booking_status = 'paid'
+            booking.save(update_fields=['payment_status', 'booking_status'])
             send_booking_notification_email(booking, 'payment_status_changed', previous_status=old_status)
             updated += 1
         self.message_user(request, "Selected bookings are marked completed.")
@@ -204,7 +213,8 @@ class BookingAdmin(admin.ModelAdmin):
             if old_status == 'pending':
                 continue
             booking.payment_status = 'pending'
-            booking.save(update_fields=['payment_status'])
+            booking.booking_status = 'pending'
+            booking.save(update_fields=['payment_status', 'booking_status'])
             send_booking_notification_email(booking, 'payment_status_changed', previous_status=old_status)
             updated += 1
         self.message_user(request, "Selected bookings are marked pending.")
@@ -217,7 +227,8 @@ class BookingAdmin(admin.ModelAdmin):
             if old_status == 'failed':
                 continue
             booking.payment_status = 'failed'
-            booking.save(update_fields=['payment_status'])
+            booking.booking_status = 'pending'
+            booking.save(update_fields=['payment_status', 'booking_status'])
             send_booking_notification_email(booking, 'payment_status_changed', previous_status=old_status)
             updated += 1
         self.message_user(request, "Selected bookings are marked failed.")
@@ -233,6 +244,15 @@ class BookingAdmin(admin.ModelAdmin):
             delete_url,
         )
     manage_actions.short_description = 'Actions'
+
+
+@admin.register(Payment)
+class PaymentAdmin(admin.ModelAdmin):
+    list_display = ['payment_id', 'booking', 'payment_method', 'amount', 'payment_status', 'transaction_id', 'paid_at', 'created_at']
+    list_filter = ['payment_status', 'payment_method', 'created_at']
+    search_fields = ['payment_id', 'booking__booking_id', 'transaction_id']
+    readonly_fields = ['payment_id', 'created_at', 'paid_at']
+    ordering = ['-created_at']
 
 
 @admin.register(RoomType)

@@ -28,6 +28,7 @@ def send_booking_notification_email(booking, event, previous_status=None):
     room_number = booking.room.room_number if booking.room_id else '-'
 
     event_key = (event or '').strip().lower()
+    payment_label = 'Paid' if booking.payment_status == 'completed' else booking.payment_status.title()
 
     if event_key == 'booking_created':
         subject = f'Booking received: {booking.booking_id}'
@@ -37,7 +38,7 @@ def send_booking_notification_email(booking, event, previous_status=None):
             f'Check-in: {booking.check_in}\n'
             f'Check-out: {booking.check_out}\n'
             f'Total amount: NPR {booking.total_price}\n'
-            f'Payment status: {booking.payment_status.title()}\n\n'
+            f'Payment status: {payment_label}\n\n'
             f'Thank you for choosing NepStay.'
         )
     elif event_key == 'payment_completed':
@@ -62,7 +63,7 @@ def send_booking_notification_email(booking, event, previous_status=None):
         )
     elif event_key == 'payment_status_changed':
         old = (previous_status or 'unknown').title()
-        new = (booking.payment_status or 'unknown').title()
+        new = payment_label if booking.payment_status else 'Unknown'
         subject = f'Booking payment update: {booking.booking_id}'
         body = (
             f'Hi {booking.full_name},\n\n'
@@ -72,6 +73,17 @@ def send_booking_notification_email(booking, event, previous_status=None):
             f'Hotel: {hotel_name}\n'
             f'Room: {room_number}\n\n'
             f'If you did not expect this update, please contact support.'
+        )
+    elif event_key == 'booking_cancelled':
+        subject = f'Booking cancelled: {booking.booking_id}'
+        body = (
+            f'Hi {booking.full_name},\n\n'
+            f'Your booking {booking.booking_id} has been cancelled.\n'
+            f'Hotel: {hotel_name}\n'
+            f'Room: {room_number}\n'
+            f'Check-in: {booking.check_in}\n'
+            f'Check-out: {booking.check_out}\n\n'
+            f'If this was a mistake, you can create a new booking from the rooms page.'
         )
     else:
         return False

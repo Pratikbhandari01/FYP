@@ -141,6 +141,19 @@ class Room(models.Model):
         return self.room_type.no_of_beds
     
 class Booking(models.Model):
+    BOOKING_STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('paid', 'Paid'),
+        ('cancelled', 'Cancelled'),
+    )
+
+    PAYMENT_STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('completed', 'Paid'),
+        ('failed', 'Failed'),
+        ('cancelled', 'Cancelled'),
+    )
+
     customer = models.ForeignKey(User, on_delete=models.CASCADE, related_name="bookings", null=True, blank=True)
     full_name = models.CharField(max_length=255)
     email = models.EmailField()
@@ -150,9 +163,11 @@ class Booking(models.Model):
     room = models.ForeignKey(Room, on_delete=models.CASCADE)
     check_in = models.DateField()
     check_out = models.DateField()
+    guests = models.PositiveSmallIntegerField(default=1)
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
     date = models.DateTimeField(auto_now_add=True)
-    payment_status = models.CharField(max_length=20, choices=(('pending', 'Pending'), ('completed', 'Completed'), ('failed', 'Failed')), default='pending')
+    booking_status = models.CharField(max_length=20, choices=BOOKING_STATUS_CHOICES, default='pending')
+    payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending')
     total_days = models.IntegerField(default=1)
     is_active = models.BooleanField(default=True)
     booking_id = ShortUUIDField(length=8, unique=True, blank=True)
@@ -166,6 +181,46 @@ class Booking(models.Model):
         return 1 if self.room_id else 0
     class Meta:
         verbose_name_plural = "Bookings"
+
+    def save(self, *args, **kwargs):
+        if self.payment_status == 'completed':
+            self.booking_status = 'paid'
+        elif self.payment_status == 'cancelled' or self.booking_status == 'cancelled':
+            self.booking_status = 'cancelled'
+            if self.payment_status != 'completed':
+                self.payment_status = 'cancelled'
+        elif self.booking_status == 'paid':
+            self.payment_status = 'completed'
+        else:
+            self.booking_status = 'pending'
+            if self.payment_status not in ('pending', 'failed'):
+                self.payment_status = 'pending'
+
+        super().save(*args, **kwargs)
+
+
+class Payment(models.Model):
+    PAYMENT_STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('paid', 'Paid'),
+        ('failed', 'Failed'),
+        ('cancelled', 'Cancelled'),
+    )
+
+    payment_id = ShortUUIDField(length=10, unique=True, blank=True)
+    booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name='payments')
+    payment_method = models.CharField(max_length=50, default='khalti')
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending')
+    transaction_id = models.CharField(max_length=120, blank=True)
+    paid_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Payment {self.payment_id} - {self.booking.booking_id}"
 
 
 class UserProfile(models.Model):

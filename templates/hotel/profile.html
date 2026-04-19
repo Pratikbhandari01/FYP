@@ -62,7 +62,10 @@
                             <div class="card-body text-center">
                                 <i class="bi bi-calendar-check" style="font-size: 2rem; display: block; margin-bottom: 0.5rem;"></i>
                                 <h6 class="card-title">Total Bookings</h6>
-                                <h2>0</h2>
+                                <h2>{{ total_bookings }}</h2>
+                                <p class="mb-0 small">
+                                    Paid: {{ completed_bookings }} | Pending: {{ pending_bookings }}
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -71,7 +74,8 @@
                             <div class="card-body text-center">
                                 <i class="bi bi-credit-card" style="font-size: 2rem; display: block; margin-bottom: 0.5rem;"></i>
                                 <h6 class="card-title">Amount Spent</h6>
-                                <h2>NPR 0</h2>
+                                <h2>NPR {{ total_amount_spent }}</h2>
+                                <p class="mb-0 small">Cancelled: {{ cancelled_bookings }} | Failed payments: {{ failed_bookings }}</p>
                             </div>
                         </div>
                     </div>
@@ -95,12 +99,32 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    {% for booking in recent_bookings %}
+                                    <tr>
+                                        <td>{{ booking.booking_id }}</td>
+                                        <td>{{ booking.hotel.name }}</td>
+                                        <td>{{ booking.check_in|date:"M d, Y" }}</td>
+                                        <td>{{ booking.check_out|date:"M d, Y" }}</td>
+                                        <td>
+                                            {% if booking.booking_status == 'paid' %}
+                                            <span class="badge text-bg-success">Completed</span>
+                                            {% elif booking.booking_status == 'pending' %}
+                                            <span class="badge text-bg-warning">Pending</span>
+                                            {% elif booking.booking_status == 'cancelled' %}
+                                            <span class="badge text-bg-secondary">Cancelled</span>
+                                            {% else %}
+                                            <span class="badge text-bg-danger">Failed</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% empty %}
                                     <tr>
                                         <td colspan="5" class="text-center text-muted py-4">
                                             <i class="bi bi-inbox" style="font-size: 2rem; display: block; margin-bottom: 0.5rem;"></i>
                                             No bookings yet
                                         </td>
                                     </tr>
+                                    {% endfor %}
                                 </tbody>
                             </table>
                         </div>

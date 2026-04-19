@@ -5,19 +5,20 @@ import requests
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.db.models import Sum
 from django.db.models import Exists, OuterRef, Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views.generic import ListView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import CreateView, UpdateView, DeleteView
 from django.urls import reverse, reverse_lazy
-from .models import RoomType, Hotel, Booking, Room, ContactMessage, Review
+from .models import RoomType, Hotel, Booking, Payment, Room, ContactMessage, Review
 from .forms import ContactForm, HotelSearchForm, HotelForm, RoomForm, RoomTypeForm, ReviewForm
 from .notifications import send_booking_notification_email
 from userauths.decorators import agent_required
 from django.utils.decorators import method_decorator
-from django.contrib.auth.decorators import login_required
 from userauths.decorators import customer_required
 
 
@@ -30,10 +31,33 @@ def _agent_booking_block(request):
 
 @login_required
 def profile_view(request):
-    profile = request.user.profile
+    profile = getattr(request.user, 'profile', None)
+    user_bookings = Booking.objects.filter(customer=request.user)
+
+    total_bookings = user_bookings.count()
+    completed_bookings = user_bookings.filter(booking_status='paid').count()
+    pending_bookings = user_bookings.filter(booking_status='pending').count()
+    failed_bookings = user_bookings.filter(payment_status='failed').count()
+    cancelled_bookings = user_bookings.filter(booking_status='cancelled').count()
+    total_amount_spent = (
+        user_bookings.filter(booking_status='paid').aggregate(total=Sum('total_price')).get('total')
+        or Decimal('0.00')
+    )
+    recent_bookings = (
+        user_bookings.select_related('hotel', 'room')
+        .order_by('-date')[:5]
+    )
+
     return render(request, 'hotel/profile.html', {
         'user': request.user,
-        'profile': profile
+        'profile': profile,
+        'total_bookings': total_bookings,
+        'completed_bookings': completed_bookings,
+        'pending_bookings': pending_bookings,
+        'failed_bookings': failed_bookings,
+        'cancelled_bookings': cancelled_bookings,
+        'total_amount_spent': total_amount_spent,
+        'recent_bookings': recent_bookings,
     })
 
 
@@ -202,6 +226,84 @@ def _is_invalid_token_error(payload):
     return 'invalid token' in reason or 'unauthorized' in reason
 
 
+def _initiate_khalti_payment(request, booking):
+    if not settings.KHALTI_SECRET_KEY:
+        messages.error(request, 'Khalti secret key is not configured on server. Set KHALTI_SECRET_KEY first.')
+        return redirect('hotel:customer_bookings')
+
+    return_url = request.build_absolute_uri(reverse('hotel:khalti_payment_callback'))
+    website_url = request.build_absolute_uri('/')
+    amount_paisa = int(booking.total_price * Decimal('100'))
+
+    payload = {
+        'return_url': return_url,
+        'website_url': website_url,
+        'amount': amount_paisa,
+        'purchase_order_id': booking.booking_id,
+        'purchase_order_name': f'Room {booking.room.room_number} at {booking.hotel.name}',
+        'customer_info': {
+            'name': booking.full_name,
+            'email': booking.email,
+            'phone': booking.Phone,
+        },
+    }
+
+    try:
+        response = requests.post(
+            settings.KHALTI_INITIATE_URL,
+            json=payload,
+            headers=_khalti_headers(),
+            timeout=20,
+        )
+        data = response.json()
+    except (requests.RequestException, ValueError):
+        messages.error(request, 'Could not reach Khalti. Your booking is saved as pending. Please try payment again.')
+        return redirect('hotel:customer_bookings')
+
+    if response.status_code != 200 and _is_invalid_token_error(data):
+        try:
+            sandbox_response = requests.post(
+                'https://dev.khalti.com/api/v2/epayment/initiate/',
+                json=payload,
+                headers=_khalti_headers(),
+                timeout=20,
+            )
+            sandbox_data = sandbox_response.json()
+        except (requests.RequestException, ValueError):
+            sandbox_response = None
+            sandbox_data = None
+
+        if sandbox_response is not None and sandbox_response.status_code == 200 and sandbox_data.get('payment_url'):
+            Payment.objects.create(
+                booking=booking,
+                payment_method='khalti',
+                amount=booking.total_price,
+                payment_status='pending',
+                transaction_id=(sandbox_data.get('pidx') or ''),
+            )
+            return redirect(sandbox_data['payment_url'])
+
+    payment_url = data.get('payment_url')
+    if response.status_code != 200 or not payment_url:
+        khalti_reason = _extract_khalti_error(data)
+        if _is_invalid_token_error(data):
+            khalti_reason = (
+                f'{khalti_reason} Use sandbox keys with dev endpoint or live keys with live endpoint. '
+                'Also make sure KHALTI_SECRET_KEY does not include the text "Key".'
+            )
+        messages.error(request, f'Khalti payment could not be initialized. Booking is pending: {khalti_reason}')
+        return redirect('hotel:customer_bookings')
+
+    Payment.objects.create(
+        booking=booking,
+        payment_method='khalti',
+        amount=booking.total_price,
+        payment_status='pending',
+        transaction_id=(data.get('pidx') or ''),
+    )
+    return redirect(payment_url)
+
+
 @login_required(login_url='userauths:login')
 def book_room(request, room_id):
     blocked_response = _agent_booking_block(request)
@@ -219,21 +321,48 @@ def book_room(request, room_id):
         return redirect('hotel:rooms')
 
     today = datetime.now().date()
-    book_context = {'room': room, 'today': today}
+    book_context = {
+        'room': room,
+        'today': today,
+        'form_values': {
+            'full_name': request.user.get_full_name() or request.user.username,
+            'email': request.user.email,
+            'phone': getattr(request.user, 'phone', ''),
+            'check_in': '',
+            'check_out': '',
+            'guests': '1',
+        },
+    }
 
     if request.method == 'POST':
-        if not settings.KHALTI_SECRET_KEY:
-            messages.error(request, 'Khalti secret key is not configured on server. Set KHALTI_SECRET_KEY first.')
-            return render(request, 'hotel/book_room.html', book_context)
-
         full_name = request.POST.get('full_name', '').strip() or request.user.username
         email = request.POST.get('email', '').strip() or request.user.email
         phone = request.POST.get('phone', '').strip()
         check_in = request.POST.get('check_in')
         check_out = request.POST.get('check_out')
+        guests_raw = request.POST.get('guests', '1').strip()
 
-        if not phone or not check_in or not check_out:
+        book_context['form_values'] = {
+            'full_name': full_name,
+            'email': email,
+            'phone': phone,
+            'check_in': check_in or '',
+            'check_out': check_out or '',
+            'guests': guests_raw or '1',
+        }
+
+        if not phone or not check_in or not check_out or not guests_raw:
             messages.error(request, "Please fill out all booking fields.")
+            return render(request, 'hotel/book_room.html', book_context)
+
+        try:
+            guests = int(guests_raw)
+        except (TypeError, ValueError):
+            messages.error(request, 'Please enter a valid number of guests.')
+            return render(request, 'hotel/book_room.html', book_context)
+
+        if guests < 1 or guests > 10:
+            messages.error(request, 'Guests must be between 1 and 10.')
             return render(request, 'hotel/book_room.html', book_context)
 
         try:
@@ -255,6 +384,10 @@ def book_room(request, room_id):
             messages.error(request, "Check-out date must be after check-in date.")
             return render(request, 'hotel/book_room.html', book_context)
 
+        if not room.availability or not room.is_available:
+            messages.error(request, 'This room is no longer available.')
+            return redirect('hotel:rooms')
+
         total_days = (check_out_date - check_in_date).days
         total_price = room.price * Decimal(total_days)
 
@@ -268,75 +401,78 @@ def book_room(request, room_id):
             room=room,
             check_in=check_in_date,
             check_out=check_out_date,
+            guests=guests,
             total_price=total_price,
             total_days=total_days,
+            booking_status='pending',
             payment_status='pending',
         )
 
         send_booking_notification_email(booking, 'booking_created')
-
-        return_url = request.build_absolute_uri(reverse('hotel:khalti_payment_callback'))
-        website_url = request.build_absolute_uri('/')
-        amount_paisa = int(total_price * Decimal('100'))
-
-        payload = {
-            'return_url': return_url,
-            'website_url': website_url,
-            'amount': amount_paisa,
-            'purchase_order_id': booking.booking_id,
-            'purchase_order_name': f'Room {room.room_number} at {room.hotel.name}',
-            'customer_info': {
-                'name': full_name,
-                'email': email,
-                'phone': phone,
-            },
-        }
-
-        try:
-            response = requests.post(
-                settings.KHALTI_INITIATE_URL,
-                json=payload,
-                headers=_khalti_headers(),
-                timeout=20,
-            )
-            data = response.json()
-        except (requests.RequestException, ValueError):
-            booking.delete()
-            messages.error(request, 'Unable to connect to Khalti right now. Please try again.')
-            return render(request, 'hotel/book_room.html', book_context)
-
-        if response.status_code != 200 and _is_invalid_token_error(data):
-            # Many integrations use sandbox keys. Retry once against dev endpoint.
-            try:
-                sandbox_response = requests.post(
-                    'https://dev.khalti.com/api/v2/epayment/initiate/',
-                    json=payload,
-                    headers=_khalti_headers(),
-                    timeout=20,
-                )
-                sandbox_data = sandbox_response.json()
-            except (requests.RequestException, ValueError):
-                sandbox_response = None
-                sandbox_data = None
-
-            if sandbox_response is not None and sandbox_response.status_code == 200 and sandbox_data.get('payment_url'):
-                return redirect(sandbox_data['payment_url'])
-
-        payment_url = data.get('payment_url')
-        if response.status_code != 200 or not payment_url:
-            booking.delete()
-            khalti_reason = _extract_khalti_error(data)
-            if _is_invalid_token_error(data):
-                khalti_reason = (
-                    f'{khalti_reason} Use sandbox keys with dev endpoint or live keys with live endpoint. '
-                    'Also make sure KHALTI_SECRET_KEY does not include the text "Key".'
-                )
-            messages.error(request, f'Khalti payment could not be initialized: {khalti_reason}')
-            return render(request, 'hotel/book_room.html', book_context)
-
-        return redirect(payment_url)
+        messages.success(request, 'Booking created. Complete payment to confirm your stay.')
+        return _initiate_khalti_payment(request, booking)
 
     return render(request, 'hotel/book_room.html', book_context)
+
+
+@login_required(login_url='userauths:login')
+@customer_required
+def proceed_booking_payment(request, booking_id):
+    blocked_response = _agent_booking_block(request)
+    if blocked_response is not None:
+        return blocked_response
+
+    booking = get_object_or_404(
+        Booking.objects.select_related('hotel', 'room'),
+        booking_id=booking_id,
+        customer=request.user,
+    )
+
+    if booking.booking_status == 'cancelled':
+        messages.error(request, 'This booking has been cancelled and cannot be paid.')
+        return redirect('hotel:customer_bookings')
+
+    if booking.booking_status == 'paid' or booking.payment_status == 'completed':
+        messages.info(request, 'This booking is already paid.')
+        return redirect('hotel:customer_bookings')
+
+    if not booking.room.availability or not booking.room.is_available:
+        messages.error(request, 'This room is unavailable. Please choose another room.')
+        return redirect('hotel:rooms')
+
+    return _initiate_khalti_payment(request, booking)
+
+
+@login_required(login_url='userauths:login')
+@customer_required
+def cancel_booking(request, booking_id):
+    if request.method != 'POST':
+        return redirect('hotel:customer_bookings')
+
+    booking = get_object_or_404(Booking, booking_id=booking_id, customer=request.user)
+
+    if booking.booking_status == 'paid' or booking.payment_status == 'completed':
+        messages.error(request, 'Paid bookings cannot be cancelled from this page. Please contact support.')
+        return redirect('hotel:customer_bookings')
+
+    if booking.booking_status == 'cancelled':
+        messages.info(request, 'This booking is already cancelled.')
+        return redirect('hotel:customer_bookings')
+
+    booking.booking_status = 'cancelled'
+    booking.payment_status = 'cancelled'
+    booking.is_active = False
+    booking.save(update_fields=['booking_status', 'payment_status', 'is_active'])
+
+    Payment.objects.create(
+        booking=booking,
+        payment_method='khalti',
+        amount=booking.total_price,
+        payment_status='cancelled',
+    )
+    send_booking_notification_email(booking, 'booking_cancelled')
+    messages.success(request, f'Booking {booking.booking_id} has been cancelled.')
+    return redirect('hotel:customer_bookings')
 
 
 @login_required(login_url='userauths:login')
@@ -354,6 +490,10 @@ def khalti_payment_callback(request):
 
     booking = get_object_or_404(Booking, booking_id=booking_id, customer=request.user)
 
+    if booking.booking_status == 'cancelled':
+        messages.error(request, 'This booking was cancelled and cannot be paid.')
+        return redirect('hotel:customer_bookings')
+
     try:
         lookup_response = requests.post(
             settings.KHALTI_LOOKUP_URL,
@@ -369,9 +509,30 @@ def khalti_payment_callback(request):
     if lookup_response.status_code == 200 and lookup_data.get('status') == 'Completed':
         previous_status = booking.payment_status
         booking.payment_status = 'completed'
-        booking.save(update_fields=['payment_status'])
+        booking.booking_status = 'paid'
+        booking.save(update_fields=['payment_status', 'booking_status'])
         if previous_status != 'completed':
             send_booking_notification_email(booking, 'payment_completed', previous_status=previous_status)
+
+        pending_payment = (
+            Payment.objects.filter(booking=booking, payment_status='pending')
+            .order_by('-created_at')
+            .first()
+        )
+        if pending_payment:
+            pending_payment.payment_status = 'paid'
+            pending_payment.transaction_id = pending_payment.transaction_id or pidx
+            pending_payment.paid_at = timezone.now()
+            pending_payment.save(update_fields=['payment_status', 'transaction_id', 'paid_at'])
+        else:
+            Payment.objects.create(
+                booking=booking,
+                payment_method='khalti',
+                amount=booking.total_price,
+                payment_status='paid',
+                transaction_id=pidx,
+                paid_at=timezone.now(),
+            )
 
         if booking.room.availability or booking.room.is_available:
             booking.room.availability = False
@@ -382,13 +543,22 @@ def khalti_payment_callback(request):
         return redirect('hotel:customer_bookings')
 
     previous_status = booking.payment_status
-    booking.payment_status = 'failed'
-    booking.save(update_fields=['payment_status'])
-    if previous_status != 'failed':
-        send_booking_notification_email(booking, 'payment_failed', previous_status=previous_status)
+    booking.payment_status = 'pending'
+    booking.booking_status = 'pending'
+    booking.save(update_fields=['payment_status', 'booking_status'])
+
+    Payment.objects.create(
+        booking=booking,
+        payment_method='khalti',
+        amount=booking.total_price,
+        payment_status='failed',
+        transaction_id=pidx,
+    )
+
+    send_booking_notification_email(booking, 'payment_failed', previous_status=previous_status)
     fail_reason = _extract_khalti_error(lookup_data)
-    messages.error(request, f'Payment was not completed: {fail_reason}')
-    return redirect('hotel:rooms')
+    messages.warning(request, f'Payment was not completed. Booking is still pending: {fail_reason}')
+    return redirect('hotel:customer_bookings')
 
 
 def about(request):

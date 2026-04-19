@@ -149,6 +149,11 @@
         background: var(--booking-ok-soft);
     }
 
+    .booking-status--paid {
+        color: var(--booking-ok);
+        background: var(--booking-ok-soft);
+    }
+
     .booking-status--pending {
         color: var(--booking-warn);
         background: var(--booking-warn-soft);
@@ -157,6 +162,24 @@
     .booking-status--failed {
         color: var(--booking-alert);
         background: var(--booking-alert-soft);
+    }
+
+    .booking-status--cancelled {
+        color: #6b7280;
+        background: #e5e7eb;
+    }
+
+    .booking-actions {
+        border-top: 1px solid #e4ebf3;
+        margin-top: 0.75rem;
+        padding-top: 0.8rem;
+        display: flex;
+        gap: 0.55rem;
+        flex-wrap: wrap;
+    }
+
+    .booking-actions form {
+        margin: 0;
     }
 
     .booking-card-body {
@@ -300,7 +323,7 @@
                                 <p class="hotel-meta">Room {{ booking.room.room_number }}</p>
                             </div>
                         </div>
-                        <span class="booking-status booking-status--{{ booking.payment_status|lower }}">{{ booking.payment_status }}</span>
+                        <span class="booking-status booking-status--{{ booking.booking_status|lower }}">{{ booking.booking_status|capfirst }}</span>
                     </div>
                     <div class="booking-card-body">
                         <div class="booking-line">
@@ -319,6 +342,19 @@
                             <span class="label">Total Amount</span>
                             <span class="value">NPR {{ booking.total_price }}</span>
                         </div>
+                        <div class="booking-line">
+                            <span class="label">Guests</span>
+                            <span class="value">{{ booking.guests }}</span>
+                        </div>
+                        {% if booking.booking_status == 'pending' %}
+                        <div class="booking-actions">
+                            <a href="{% url 'hotel:proceed_booking_payment' booking.booking_id %}" class="btn btn-sm btn-primary">Proceed to Payment</a>
+                            <form method="post" action="{% url 'hotel:cancel_booking' booking.booking_id %}" onsubmit="return confirm('Cancel this booking?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Cancel Booking</button>
+                            </form>
+                        </div>
+                        {% endif %}
                     </div>
                 </article>
             </div>
