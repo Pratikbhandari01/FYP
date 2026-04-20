@@ -5,6 +5,22 @@ from django.db import transaction
 from .models import Profile
 User = get_user_model()
 
+
+class PasswordReauthForm(forms.Form):
+    current_password = forms.CharField(label="Current Password", widget=forms.PasswordInput)
+
+    def __init__(self, user, *args, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+
+    def clean_current_password(self):
+        current_password = self.cleaned_data.get("current_password")
+
+        if not self.user.check_password(current_password):
+            raise forms.ValidationError("Current password is incorrect.")
+
+        return current_password
+
 class UserRegistrationForm(forms.ModelForm):
     GENDER_REGISTRATION_CHOICES = (
         ("male", "Male"),

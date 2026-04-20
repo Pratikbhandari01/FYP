@@ -56,10 +56,13 @@
                 </div>
             </div>
 
-            <label class="auth-meta" for="remember_me">
-                <input type="checkbox" id="remember_me" name="remember_me" value="1">
-                <span>Remember me</span>
-            </label>
+            <div class="auth-meta-row">
+                <label class="auth-meta" for="remember_me">
+                    <input type="checkbox" id="remember_me" name="remember_me" value="1">
+                    <span>Remember me</span>
+                </label>
+                <a href="{% url 'userauths:forgot_password' %}" class="auth-forgot-link">Forgot password?</a>
+            </div>
 
             <button type="submit" class="auth-btn">Log in</button>
         </form>

@@ -9,6 +9,16 @@ from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 
 logger = logging.getLogger(__name__)
+_LAST_EMAIL_ERROR = ''
+
+
+def _set_last_email_error(message: str):
+    global _LAST_EMAIL_ERROR
+    _LAST_EMAIL_ERROR = (message or '').strip()
+
+
+def get_last_email_error() -> str:
+    return _LAST_EMAIL_ERROR
 
 
 def _build_absolute_url(path: str, request=None) -> str:
@@ -43,6 +53,7 @@ def send_registration_verification_email(user, request=None) -> bool:
     )
 
     try:
+        _set_last_email_error('')
         send_mail(
             subject=subject,
             message=message,
@@ -51,7 +62,8 @@ def send_registration_verification_email(user, request=None) -> bool:
             fail_silently=False,
         )
         return True
-    except Exception:
+    except Exception as exc:
+        _set_last_email_error(str(exc))
         logger.exception("Failed to send verification email to user_id=%s", user.pk)
         return False
 
@@ -70,6 +82,7 @@ def send_agent_approved_email(user) -> bool:
     )
 
     try:
+        _set_last_email_error('')
         send_mail(
             subject=subject,
             message=message,
@@ -78,30 +91,32 @@ def send_agent_approved_email(user) -> bool:
             fail_silently=False,
         )
         return True
-    except Exception:
+    except Exception as exc:
+        _set_last_email_error(str(exc))
         logger.exception("Failed to send agent approval email to user_id=%s", user.pk)
         return False
 
 
-def generate_login_otp(length: int = 6) -> str:
+def generate_otp(length: int = 6) -> str:
     length = max(4, int(length or 6))
     return ''.join(random.choices('0123456789', k=length))
 
 
-def send_login_otp_email(user, otp_code: str) -> bool:
+def send_email_verification_otp_email(user, otp_code: str) -> bool:
     if not user or not user.email:
         return False
 
-    subject = "Your NepStay login OTP"
+    subject = "Your NepStay email verification OTP"
     message = (
         f"Hi {user.full_name or user.username},\n\n"
-        "Use the OTP below to complete your NepStay login:\n"
+        "Use the OTP below to verify your NepStay account email:\n"
         f"{otp_code}\n\n"
         "This OTP expires in 10 minutes.\n"
-        "If you did not attempt to login, please ignore this email and consider changing your password.\n"
+        "If you did not create this account, please ignore this email.\n"
     )
 
     try:
+        _set_last_email_error('')
         send_mail(
             subject=subject,
             message=message,
@@ -110,6 +125,65 @@ def send_login_otp_email(user, otp_code: str) -> bool:
             fail_silently=False,
         )
         return True
-    except Exception:
-        logger.exception("Failed to send login OTP email to user_id=%s", user.pk)
+    except Exception as exc:
+        _set_last_email_error(str(exc))
+        logger.exception("Failed to send email verification OTP to user_id=%s", user.pk)
+        return False
+
+
+def send_password_change_otp_email(user, otp_code: str) -> bool:
+    if not user or not user.email:
+        return False
+
+    subject = "Your NepStay password change OTP"
+    message = (
+        f"Hi {user.full_name or user.username},\n\n"
+        "Use the OTP below to continue changing your NepStay password:\n"
+        f"{otp_code}\n\n"
+        "This OTP expires in 10 minutes.\n"
+        "If you did not request this change, please ignore this email.\n"
+    )
+
+    try:
+        _set_last_email_error('')
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            fail_silently=False,
+        )
+        return True
+    except Exception as exc:
+        _set_last_email_error(str(exc))
+        logger.exception("Failed to send password change OTP to user_id=%s", user.pk)
+        return False
+
+
+def send_password_reset_otp_email(user, otp_code: str) -> bool:
+    if not user or not user.email:
+        return False
+
+    subject = "Your NepStay password reset OTP"
+    message = (
+        f"Hi {user.full_name or user.username},\n\n"
+        "Use the OTP below to reset your NepStay password:\n"
+        f"{otp_code}\n\n"
+        "This OTP expires in 10 minutes.\n"
+        "If you did not request a password reset, please ignore this email.\n"
+    )
+
+    try:
+        _set_last_email_error('')
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            fail_silently=False,
+        )
+        return True
+    except Exception as exc:
+        _set_last_email_error(str(exc))
+        logger.exception("Failed to send password reset OTP email to user_id=%s", user.pk)
         return False

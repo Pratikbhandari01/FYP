@@ -35,6 +35,10 @@
                         <span>{{ user.username }}</span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end user-menu" aria-labelledby="navbarDropdown">
+                        {% if user.is_staff or user.is_superuser %}
+                        <li><a class="dropdown-item" href="{% url 'userauths:smtp_otp_test' %}"><i class="bi bi-envelope-check"></i> SMTP OTP Test</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        {% endif %}
                         {% if user.role != 'agent' %}
                         <li><a class="dropdown-item" href="{% url 'hotel:customer_bookings' %}"><i class="bi bi-receipt"></i> My Bookings</a></li>
                         {% endif %}

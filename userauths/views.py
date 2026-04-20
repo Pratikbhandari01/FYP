@@ -2,7 +2,7 @@ from django.shortcuts import redirect, render
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model, login
 from django.contrib.auth import update_session_auth_hash
-from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth.forms import SetPasswordForm
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib import messages
 from django.db import DatabaseError, IntegrityError
@@ -10,51 +10,121 @@ from django.utils import timezone
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
 from datetime import timedelta
+from types import SimpleNamespace
 import hashlib
 from userauths.models import Profile
-from userauths.forms import UserRegistrationForm
+from userauths.forms import PasswordReauthForm, UserRegistrationForm
 from userauths.decorators import agent_required
 from userauths.email_utils import (
-    generate_login_otp,
-    send_login_otp_email,
-    send_registration_verification_email,
+    generate_otp,
+    get_last_email_error,
+    send_email_verification_otp_email,
+    send_password_change_otp_email,
+    send_password_reset_otp_email,
 )
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db.models import Avg, Count
 from hotel.models import Booking, Hotel, Review, Room
 
 User = get_user_model()
 
-LOGIN_OTP_SESSION_KEYS = [
-    'login_otp_user_id',
-    'login_otp_hash',
-    'login_otp_expires_at',
-    'login_otp_remember_me',
-    'login_otp_attempts',
-    'login_otp_dev_code',
-    'login_otp_backend',
+PASSWORD_RESET_OTP_SESSION_KEYS = [
+    'password_reset_user_id',
+    'password_reset_otp_hash',
+    'password_reset_otp_expires_at',
+    'password_reset_otp_attempts',
+    'password_reset_otp_dev_code',
+]
+
+CHANGE_PASSWORD_OTP_SESSION_KEYS = [
+    'change_password_user_id',
+    'change_password_otp_hash',
+    'change_password_otp_expires_at',
+    'change_password_otp_attempts',
+    'change_password_otp_dev_code',
+]
+
+EMAIL_VERIFY_OTP_SESSION_KEYS = [
+    'email_verify_user_id',
+    'email_verify_otp_hash',
+    'email_verify_otp_expires_at',
+    'email_verify_otp_attempts',
+    'email_verify_otp_dev_code',
 ]
 
 
-def _hash_login_otp(raw_code):
-    return hashlib.sha256(f'{raw_code}:{User._meta.label_lower}'.encode('utf-8')).hexdigest()
+def _hash_password_reset_otp(raw_code):
+    return hashlib.sha256(f'reset:{raw_code}:{User._meta.label_lower}'.encode('utf-8')).hexdigest()
 
 
-def _clear_login_otp_session(request):
-    for key in LOGIN_OTP_SESSION_KEYS:
+def _clear_password_reset_otp_session(request):
+    for key in PASSWORD_RESET_OTP_SESSION_KEYS:
         request.session.pop(key, None)
 
 
-def _queue_login_otp(request, user, remember_me=False, backend_path=''):
-    otp_code = generate_login_otp(6)
+def _hash_change_password_otp(raw_code):
+    return hashlib.sha256(f'change:{raw_code}:{User._meta.label_lower}'.encode('utf-8')).hexdigest()
+
+
+def _clear_change_password_otp_session(request):
+    for key in CHANGE_PASSWORD_OTP_SESSION_KEYS:
+        request.session.pop(key, None)
+
+
+def _hash_email_verify_otp(raw_code):
+    return hashlib.sha256(f'verify:{raw_code}:{User._meta.label_lower}'.encode('utf-8')).hexdigest()
+
+
+def _clear_email_verify_otp_session(request):
+    for key in EMAIL_VERIFY_OTP_SESSION_KEYS:
+        request.session.pop(key, None)
+
+
+def _queue_email_verify_otp(request, user):
+    otp_code = generate_otp(6)
     expires_at = timezone.now() + timedelta(minutes=10)
 
-    request.session['login_otp_user_id'] = user.id
-    request.session['login_otp_hash'] = _hash_login_otp(otp_code)
-    request.session['login_otp_expires_at'] = expires_at.isoformat()
-    request.session['login_otp_remember_me'] = bool(remember_me)
-    request.session['login_otp_attempts'] = 0
-    request.session['login_otp_backend'] = backend_path or getattr(user, 'backend', '')
+    request.session['email_verify_user_id'] = user.id
+    request.session['email_verify_otp_hash'] = _hash_email_verify_otp(otp_code)
+    request.session['email_verify_otp_expires_at'] = expires_at.isoformat()
+    request.session['email_verify_otp_attempts'] = 0
+
+    return otp_code
+
+
+def _start_email_verification_flow(request, user):
+    _clear_email_verify_otp_session(request)
+    otp_code = _queue_email_verify_otp(request, user)
+
+    if send_email_verification_otp_email(user, otp_code):
+        messages.info(request, f'Verification OTP sent to {_mask_email(user.email)}.')
+        return redirect('userauths:verify_email_otp')
+
+    _clear_email_verify_otp_session(request)
+    messages.error(request, _smtp_failure_message())
+    return redirect('userauths:login')
+
+
+def _queue_password_reset_otp(request, user):
+    otp_code = generate_otp(6)
+    expires_at = timezone.now() + timedelta(minutes=10)
+
+    request.session['password_reset_user_id'] = user.id
+    request.session['password_reset_otp_hash'] = _hash_password_reset_otp(otp_code)
+    request.session['password_reset_otp_expires_at'] = expires_at.isoformat()
+    request.session['password_reset_otp_attempts'] = 0
+
+    return otp_code
+
+
+def _queue_change_password_otp(request, user):
+    otp_code = generate_otp(6)
+    expires_at = timezone.now() + timedelta(minutes=10)
+
+    request.session['change_password_user_id'] = user.id
+    request.session['change_password_otp_hash'] = _hash_change_password_otp(otp_code)
+    request.session['change_password_otp_expires_at'] = expires_at.isoformat()
+    request.session['change_password_otp_attempts'] = 0
 
     return otp_code
 
@@ -68,6 +138,37 @@ def _mask_email(email):
     else:
         masked_local = local[0] + ('*' * (len(local) - 2)) + local[-1]
     return f'{masked_local}@{domain}'
+
+
+def _email_smtp_ready():
+    return bool(settings.EMAIL_HOST_USER and settings.EMAIL_HOST_PASSWORD)
+
+
+def _smtp_failure_message():
+    last_error = (get_last_email_error() or '').strip()
+    if last_error:
+        lower = last_error.lower()
+        if 'not yet activated' in lower:
+            return (
+                'Unable to send OTP email. Brevo says your SMTP account is not yet activated. '
+                'Please contact contact@sendinblue.com for activation.'
+            )
+        if 'username and password not accepted' in lower:
+            return 'Unable to send OTP email. SMTP credentials were rejected by provider. Please verify login/key.'
+        return f'Unable to send OTP email. Provider response: {last_error}'
+
+    provider = (getattr(settings, 'EMAIL_PROVIDER', '') or '').strip().lower()
+    if provider == 'brevo':
+        return (
+            'Unable to send OTP email. Your Brevo SMTP account is likely not activated yet. '
+            'Please activate SMTP in Brevo or contact contact@sendinblue.com.'
+        )
+    if provider == 'gmail':
+        return (
+            'Unable to send OTP email. For Gmail, set a valid 16-character App Password '
+            'in EMAIL_HOST_PASSWORD.'
+        )
+    return 'Unable to send OTP email. Please check SMTP settings and try again.'
 
 
 def _post_login_redirect(request, user_auth):
@@ -99,31 +200,15 @@ def RegisterView(request):
                 messages.error(request, "Registration failed. Your account was not created. Please try again.")
                 return render(request, "userauths/register.html", {"form": form})
 
-            email_sent = send_registration_verification_email(user, request=request)
-
-            authenticated_user = authenticate(
-                request,
-                username=user.username,
-                password=form.cleaned_data.get("password"),
-            )
-
-            if authenticated_user is not None:
-                login(request, authenticated_user)
-            else:
-                messages.warning(request, "Account created, but auto-login failed. Please sign in once.")
-                return redirect("userauths:login")
-
             messages.success(request, f"Welcome {user.full_name or user.username}, your account is successfully created.")
-            if email_sent:
-                messages.info(request, "A verification email has been sent to your inbox.")
-            else:
-                messages.warning(request, "Account created, but we could not send your verification email right now.")
-            
             if user.role == "agent":
                 messages.info(request, "Your agent account is submitted for admin review. Please wait for approval.")
-                return redirect("hotel:index")
-            else:
-                return redirect("hotel:index")
+
+            if not _email_smtp_ready():
+                messages.error(request, 'SMTP is not configured. Set EMAIL_HOST_USER and EMAIL_HOST_PASSWORD in .env.')
+                return redirect('userauths:register')
+            
+            return _start_email_verification_flow(request, user)
     else:
         form = UserRegistrationForm()
 
@@ -149,29 +234,15 @@ def loginView(request):
             user_auth = authenticate(request, username=user_query.username, password=password)
 
             if user_auth is not None:
-                if not user_auth.email:
-                    messages.error(request, "This account has no email address. Please contact support to enable OTP login.")
-                    return redirect("userauths:login")
+                login(request, user_auth)
+                if remember_me:
+                    request.session.set_expiry(1209600)
+                else:
+                    request.session.set_expiry(0)
 
-                _clear_login_otp_session(request)
-                otp_code = _queue_login_otp(
-                    request,
-                    user_auth,
-                    remember_me=bool(remember_me),
-                    backend_path=getattr(user_auth, 'backend', ''),
-                )
-                if not send_login_otp_email(user_auth, otp_code):
-                    if settings.DEBUG:
-                        request.session['login_otp_dev_code'] = otp_code
-                        messages.warning(request, f"SMTP email failed. Dev OTP: {otp_code}")
-                        return redirect("userauths:verify_login_otp")
-
-                    _clear_login_otp_session(request)
-                    messages.error(request, "Unable to send OTP email right now. Please try again shortly.")
-                    return redirect("userauths:login")
-
-                messages.info(request, f"An OTP has been sent to {_mask_email(user_auth.email)}.")
-                return redirect("userauths:verify_login_otp")
+                display_name = user_auth.full_name or user_auth.username
+                messages.success(request, f"Welcome back {display_name}!")
+                return _post_login_redirect(request, user_auth)
             else:
                 messages.error(request, "Invalid username/email or password.")
                 return redirect("userauths:login")
@@ -182,95 +253,361 @@ def loginView(request):
     return render(request, "userauths/Login.html")
 
 
-def verify_login_otp_view(request):
+def forgot_password_view(request):
     if request.user.is_authenticated:
         messages.warning(request, "You are already logged in.")
         return redirect("hotel:index")
 
-    user_id = request.session.get('login_otp_user_id')
-    otp_hash = request.session.get('login_otp_hash')
-    expires_raw = request.session.get('login_otp_expires_at')
+    if request.method == 'POST':
+        login_key = (request.POST.get('login_key') or '').strip()
+
+        if not login_key:
+            messages.error(request, 'Please enter your username or email.')
+            return redirect('userauths:forgot_password')
+
+        if not _email_smtp_ready():
+            messages.error(request, 'SMTP is not configured. Set EMAIL_HOST_USER and EMAIL_HOST_PASSWORD in .env.')
+            return redirect('userauths:forgot_password')
+
+        if '@' in login_key:
+            user = User.objects.filter(email__iexact=login_key).first()
+        else:
+            user = User.objects.filter(username__iexact=login_key).first()
+
+        if not user:
+            messages.error(request, 'No account found for the provided username/email.')
+            return redirect('userauths:forgot_password')
+
+        if not user.email:
+            messages.error(request, 'This account has no email address. Please contact support.')
+            return redirect('userauths:forgot_password')
+
+        _clear_password_reset_otp_session(request)
+        otp_code = _queue_password_reset_otp(request, user)
+
+        if send_password_reset_otp_email(user, otp_code):
+            messages.success(request, f'OTP sent to {_mask_email(user.email)}.')
+            return redirect('userauths:verify_password_reset_otp')
+
+        _clear_password_reset_otp_session(request)
+        messages.error(request, _smtp_failure_message())
+        return redirect('userauths:forgot_password')
+
+    return render(request, 'userauths/forgot_password.html')
+
+
+def verify_email_otp_view(request):
+    user_id = request.session.get('email_verify_user_id')
+    otp_hash = request.session.get('email_verify_otp_hash')
+    expires_raw = request.session.get('email_verify_otp_expires_at')
 
     if not user_id or not otp_hash or not expires_raw:
-        messages.warning(request, "Your login OTP session has expired. Please login again.")
-        return redirect("userauths:login")
+        messages.warning(request, 'Your email verification session has expired. Please login again.')
+        return redirect('userauths:login')
 
     user = User.objects.filter(pk=user_id).first()
     if not user:
-        _clear_login_otp_session(request)
-        messages.error(request, "User not found. Please login again.")
-        return redirect("userauths:login")
+        _clear_email_verify_otp_session(request)
+        messages.error(request, 'User not found. Please login again.')
+        return redirect('userauths:login')
+
+    if user.email_verified:
+        _clear_email_verify_otp_session(request)
+        messages.success(request, 'Your email is already verified.')
+        return _post_login_redirect(request, user)
 
     try:
         expires_at = timezone.datetime.fromisoformat(expires_raw)
         if timezone.is_naive(expires_at):
             expires_at = timezone.make_aware(expires_at, timezone.get_current_timezone())
     except ValueError:
-        _clear_login_otp_session(request)
-        messages.error(request, "Invalid OTP session state. Please login again.")
-        return redirect("userauths:login")
-
-    if request.method == 'POST' and request.POST.get('action') == 'resend':
-        otp_code = _queue_login_otp(
-            request,
-            user,
-            remember_me=bool(request.session.get('login_otp_remember_me')),
-            backend_path=request.session.get('login_otp_backend', ''),
-        )
-        if send_login_otp_email(user, otp_code):
-            request.session.pop('login_otp_dev_code', None)
-            messages.success(request, "A new OTP has been sent to your email.")
-        elif settings.DEBUG:
-            request.session['login_otp_dev_code'] = otp_code
-            messages.warning(request, f"SMTP email failed. Dev OTP: {otp_code}")
-        else:
-            messages.error(request, "Unable to resend OTP right now. Please try again.")
-        return redirect('userauths:verify_login_otp')
+        _clear_email_verify_otp_session(request)
+        messages.error(request, 'Invalid verification session. Please login again.')
+        return redirect('userauths:login')
 
     if timezone.now() > expires_at:
-        _clear_login_otp_session(request)
-        messages.error(request, "OTP has expired. Please login again.")
-        return redirect("userauths:login")
+        _clear_email_verify_otp_session(request)
+        messages.error(request, 'Verification OTP has expired. Please login again to request a new OTP.')
+        return redirect('userauths:login')
+
+    if request.method == 'POST' and request.POST.get('action') == 'resend':
+        otp_code = _queue_email_verify_otp(request, user)
+        if send_email_verification_otp_email(user, otp_code):
+            messages.success(request, 'A new verification OTP has been sent to your email.')
+        else:
+            messages.error(request, _smtp_failure_message())
+        return redirect('userauths:verify_email_otp')
 
     if request.method == 'POST':
-        submitted = (request.POST.get('otp') or '').strip()
-        attempts = int(request.session.get('login_otp_attempts', 0))
+        submitted_otp = (request.POST.get('otp') or '').strip()
+        attempts = int(request.session.get('email_verify_otp_attempts', 0))
 
         if attempts >= 5:
-            _clear_login_otp_session(request)
-            messages.error(request, "Too many invalid OTP attempts. Please login again.")
-            return redirect("userauths:login")
+            _clear_email_verify_otp_session(request)
+            messages.error(request, 'Too many invalid attempts. Please login again.')
+            return redirect('userauths:login')
 
-        if _hash_login_otp(submitted) != otp_hash:
-            request.session['login_otp_attempts'] = attempts + 1
+        if _hash_email_verify_otp(submitted_otp) != otp_hash:
+            request.session['email_verify_otp_attempts'] = attempts + 1
             remaining = max(0, 5 - (attempts + 1))
-            messages.error(request, f"Invalid OTP. {remaining} attempt(s) remaining.")
-            return redirect('userauths:verify_login_otp')
+            messages.error(request, f'Invalid OTP. {remaining} attempt(s) remaining.')
+            return redirect('userauths:verify_email_otp')
 
-        remember_me = bool(request.session.get('login_otp_remember_me'))
-        backend_path = request.session.get('login_otp_backend')
-        if not backend_path:
-            backend_path = settings.AUTHENTICATION_BACKENDS[0]
-        _clear_login_otp_session(request)
-        login(request, user, backend=backend_path)
-        if remember_me:
-            request.session.set_expiry(1209600)
-        else:
-            request.session.set_expiry(0)
-
-        display_name = user.full_name or user.username
-        messages.success(request, f"Welcome back {display_name}!")
+        user.email_verified = True
+        user.save(update_fields=['email_verified'])
+        _clear_email_verify_otp_session(request)
+        messages.success(request, 'Your email has been verified successfully.')
         return _post_login_redirect(request, user)
 
     return render(
         request,
-        "userauths/verify_login_otp.html",
+        'userauths/verify_email_otp.html',
         {
             'masked_email': _mask_email(user.email),
             'otp_expiry_minutes': 10,
-            'dev_otp': request.session.get('login_otp_dev_code', '') if settings.DEBUG else '',
         },
     )
+
+
+def verify_password_reset_otp_view(request):
+    if request.user.is_authenticated:
+        messages.warning(request, "You are already logged in.")
+        return redirect("hotel:index")
+
+    user_id = request.session.get('password_reset_user_id')
+    otp_hash = request.session.get('password_reset_otp_hash')
+    expires_raw = request.session.get('password_reset_otp_expires_at')
+
+    if not user_id or not otp_hash or not expires_raw:
+        messages.warning(request, 'Your password reset session has expired. Please request a new OTP.')
+        return redirect('userauths:forgot_password')
+
+    user = User.objects.filter(pk=user_id).first()
+    if not user:
+        _clear_password_reset_otp_session(request)
+        messages.error(request, 'User not found. Please try again.')
+        return redirect('userauths:forgot_password')
+
+    try:
+        expires_at = timezone.datetime.fromisoformat(expires_raw)
+        if timezone.is_naive(expires_at):
+            expires_at = timezone.make_aware(expires_at, timezone.get_current_timezone())
+    except ValueError:
+        _clear_password_reset_otp_session(request)
+        messages.error(request, 'Invalid password reset session. Please try again.')
+        return redirect('userauths:forgot_password')
+
+    if timezone.now() > expires_at:
+        _clear_password_reset_otp_session(request)
+        messages.error(request, 'OTP has expired. Please request a new one.')
+        return redirect('userauths:forgot_password')
+
+    if request.method == 'POST' and request.POST.get('action') == 'resend':
+        otp_code = _queue_password_reset_otp(request, user)
+        if send_password_reset_otp_email(user, otp_code):
+            messages.success(request, 'A new OTP has been sent to your email.')
+        else:
+            messages.error(request, _smtp_failure_message())
+        return redirect('userauths:verify_password_reset_otp')
+
+    if request.method == 'POST':
+        submitted_otp = (request.POST.get('otp') or '').strip()
+        new_password = request.POST.get('new_password') or ''
+        confirm_password = request.POST.get('confirm_password') or ''
+        attempts = int(request.session.get('password_reset_otp_attempts', 0))
+
+        if attempts >= 5:
+            _clear_password_reset_otp_session(request)
+            messages.error(request, 'Too many invalid OTP attempts. Please request a new OTP.')
+            return redirect('userauths:forgot_password')
+
+        if _hash_password_reset_otp(submitted_otp) != otp_hash:
+            request.session['password_reset_otp_attempts'] = attempts + 1
+            remaining = max(0, 5 - (attempts + 1))
+            messages.error(request, f'Invalid OTP. {remaining} attempt(s) remaining.')
+            return redirect('userauths:verify_password_reset_otp')
+
+        if len(new_password) < 8:
+            messages.error(request, 'New password must be at least 8 characters long.')
+            return redirect('userauths:verify_password_reset_otp')
+
+        if new_password != confirm_password:
+            messages.error(request, 'Passwords do not match.')
+            return redirect('userauths:verify_password_reset_otp')
+
+        user.set_password(new_password)
+        user.save(update_fields=['password'])
+        _clear_password_reset_otp_session(request)
+        messages.success(request, 'Your password has been reset successfully. Please login.')
+        return redirect('userauths:login')
+
+    return render(
+        request,
+        'userauths/verify_password_reset_otp.html',
+        {
+            'masked_email': _mask_email(user.email),
+            'otp_expiry_minutes': 10,
+        },
+    )
+
+
+@login_required
+def change_password_view(request):
+    if request.method == 'POST':
+        form = PasswordReauthForm(request.user, request.POST)
+        if form.is_valid():
+            if not request.user.email:
+                messages.error(request, 'This account has no email address. Please contact support.')
+                return redirect('userauths:change_password')
+
+            if not _email_smtp_ready():
+                messages.error(request, 'SMTP is not configured. Set EMAIL_HOST_USER and EMAIL_HOST_PASSWORD in .env.')
+                return redirect('userauths:change_password')
+
+            _clear_change_password_otp_session(request)
+            otp_code = _queue_change_password_otp(request, request.user)
+
+            if send_password_change_otp_email(request.user, otp_code):
+                messages.success(request, f'OTP sent to {_mask_email(request.user.email)}. Continue to change your password.')
+                return redirect('userauths:verify_change_password_otp')
+
+            _clear_change_password_otp_session(request)
+            messages.error(request, _smtp_failure_message())
+            return redirect('userauths:change_password')
+
+        messages.error(request, 'Please correct the errors below.')
+    else:
+        form = PasswordReauthForm(request.user)
+
+    return render(request, 'userauths/change_password.html', {'form': form})
+
+
+@login_required
+def verify_change_password_otp_view(request):
+    user_id = request.session.get('change_password_user_id')
+    otp_hash = request.session.get('change_password_otp_hash')
+    expires_raw = request.session.get('change_password_otp_expires_at')
+
+    if not user_id or not otp_hash or not expires_raw:
+        messages.warning(request, 'Your password change session has expired. Please start again.')
+        return redirect('userauths:change_password')
+
+    user = User.objects.filter(pk=user_id).first()
+    if not user:
+        _clear_change_password_otp_session(request)
+        messages.error(request, 'User not found. Please start again.')
+        return redirect('userauths:change_password')
+
+    try:
+        expires_at = timezone.datetime.fromisoformat(expires_raw)
+        if timezone.is_naive(expires_at):
+            expires_at = timezone.make_aware(expires_at, timezone.get_current_timezone())
+    except ValueError:
+        _clear_change_password_otp_session(request)
+        messages.error(request, 'Invalid password change session. Please start again.')
+        return redirect('userauths:change_password')
+
+    if timezone.now() > expires_at:
+        _clear_change_password_otp_session(request)
+        messages.error(request, 'OTP has expired. Please start the password change again.')
+        return redirect('userauths:change_password')
+
+    form = SetPasswordForm(user, request.POST or None)
+    form.fields['new_password1'].widget.attrs.update({
+        'class': 'auth-input',
+        'placeholder': 'New Password',
+        'autocomplete': 'new-password',
+    })
+    form.fields['new_password2'].widget.attrs.update({
+        'class': 'auth-input',
+        'placeholder': 'Confirm New Password',
+        'autocomplete': 'new-password',
+    })
+
+    if request.method == 'POST' and request.POST.get('action') == 'resend':
+        otp_code = _queue_change_password_otp(request, user)
+        if send_password_change_otp_email(user, otp_code):
+            messages.success(request, 'A new OTP has been sent to your email.')
+        else:
+            messages.error(request, _smtp_failure_message())
+        return redirect('userauths:verify_change_password_otp')
+
+    if request.method == 'POST':
+        submitted_otp = (request.POST.get('otp') or '').strip()
+        attempts = int(request.session.get('change_password_otp_attempts', 0))
+
+        if attempts >= 5:
+            _clear_change_password_otp_session(request)
+            messages.error(request, 'Too many invalid OTP attempts. Please start again.')
+            return redirect('userauths:change_password')
+
+        if _hash_change_password_otp(submitted_otp) != otp_hash:
+            request.session['change_password_otp_attempts'] = attempts + 1
+            remaining = max(0, 5 - (attempts + 1))
+            messages.error(request, f'Invalid OTP. {remaining} attempt(s) remaining.')
+            return redirect('userauths:verify_change_password_otp')
+
+        if form.is_valid():
+            updated_user = form.save()
+            update_session_auth_hash(request, updated_user)
+            _clear_change_password_otp_session(request)
+            messages.success(request, 'Your password has been changed successfully.')
+            return redirect('hotel:profile')
+
+        messages.error(request, 'Please correct the password fields below.')
+
+    return render(
+        request,
+        'userauths/verify_change_password_otp.html',
+        {
+            'masked_email': _mask_email(user.email),
+            'otp_expiry_minutes': 10,
+            'form': form,
+        },
+    )
+
+
+@login_required
+@user_passes_test(lambda u: u.is_staff or u.is_superuser)
+def smtp_otp_test_view(request):
+    context = {
+        'selected_type': 'password_change',
+        'recipient_email': '',
+    }
+
+    if request.method == 'POST':
+        recipient_email = (request.POST.get('recipient_email') or '').strip()
+        otp_type = (request.POST.get('otp_type') or 'email_verify').strip()
+
+        context['selected_type'] = otp_type
+        context['recipient_email'] = recipient_email
+
+        if not recipient_email:
+            messages.error(request, 'Please enter a recipient email address.')
+            return render(request, 'userauths/smtp_otp_test.html', context)
+
+        otp_code = generate_otp(6)
+
+        dummy_user = SimpleNamespace(
+            pk='smtp-test',
+            email=recipient_email,
+            full_name='SMTP Test User',
+            username='smtp_test',
+        )
+
+        sender_map = {
+            'password_change': send_password_change_otp_email,
+            'password_reset': send_password_reset_otp_email,
+            'email_verify': send_email_verification_otp_email,
+        }
+        send_func = sender_map.get(otp_type, send_email_verification_otp_email)
+
+        if send_func(dummy_user, otp_code):
+            messages.success(request, f'OTP test email sent successfully to {recipient_email}.')
+        else:
+            messages.error(request, _smtp_failure_message())
+
+    return render(request, 'userauths/smtp_otp_test.html', context)
         
 def logoutView(request):
     login_user = getattr(request, "user", None)
@@ -346,18 +683,3 @@ def agent_dashboard(request):
     }
     return render(request, "userauths/agent_dashboard.html", context)
 
-
-@login_required
-def change_password_view(request):
-    if request.method == 'POST':
-        form = PasswordChangeForm(request.user, request.POST)
-        if form.is_valid():
-            user = form.save()
-            update_session_auth_hash(request, user)
-            messages.success(request, 'Your password has been changed successfully.')
-            return redirect('hotel:profile')
-        messages.error(request, 'Please correct the errors below.')
-    else:
-        form = PasswordChangeForm(request.user)
-
-    return render(request, 'userauths/change_password.html', {'form': form})

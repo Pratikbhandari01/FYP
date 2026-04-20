@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+import warnings
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -29,9 +30,8 @@ def _load_env_file(env_path):
         key, value = line.split('=', 1)
         key = key.strip()
         value = value.strip().strip('"').strip("'")
-        existing = os.environ.get(key)
-        if existing is None or str(existing).strip() == '':
-            os.environ[key] = value
+        # Always apply project .env values so stale shell variables don't override app config.
+        os.environ[key] = value
 
 
 _load_env_file(BASE_DIR / '.env')
@@ -183,6 +183,9 @@ LOGOUT_URL = 'userauths:logout'
 LOGIN_REDIRECT_URL = 'hotel:index'
 LOGOUT_REDIRECT_URL = 'hotel:index'
 
+BREVO_SMTP_LOGIN = os.getenv('BREVO_SMTP_LOGIN', '').strip()
+BREVO_SMTP_KEY = os.getenv('BREVO_SMTP_KEY', '').strip()
+
 # Khalti ePayment configuration
 KHALTI_MODE = os.getenv('KHALTI_MODE', 'test').strip().lower()
 KHALTI_PUBLIC_KEY = os.getenv('KHALTI_PUBLIC_KEY', '0fbc57ceaf664c3baa5cf67816e4a4d1').strip()
@@ -212,7 +215,15 @@ def _to_int(value, default=0):
 
 # Email (SMTP) configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_PROVIDER = os.getenv('EMAIL_PROVIDER', 'gmail').strip().lower()
+_email_provider_env = os.getenv('EMAIL_PROVIDER', '').strip().lower()
+_smtp_host_hint = os.getenv('SMTP_HOST', '').strip().lower()
+_smtp_login_hint = os.getenv('SMTP_LOGIN', '').strip().lower()
+if _email_provider_env:
+    EMAIL_PROVIDER = _email_provider_env
+elif BREVO_SMTP_LOGIN or BREVO_SMTP_KEY or 'brevo' in _smtp_host_hint or 'smtp-brevo.com' in _smtp_login_hint:
+    EMAIL_PROVIDER = 'brevo'
+else:
+    EMAIL_PROVIDER = 'gmail'
 
 _EMAIL_PROVIDER_DEFAULTS = {
     'gmail': {
@@ -235,23 +246,63 @@ _EMAIL_PROVIDER_DEFAULTS = {
 
 _email_defaults = _EMAIL_PROVIDER_DEFAULTS.get(EMAIL_PROVIDER, _EMAIL_PROVIDER_DEFAULTS['gmail'])
 
-EMAIL_HOST = os.getenv('EMAIL_HOST', _email_defaults['host']).strip()
+EMAIL_HOST = os.getenv('EMAIL_HOST', '').strip() or os.getenv('SMTP_HOST', '').strip() or _email_defaults['host']
 EMAIL_PORT = _to_int(os.getenv('EMAIL_PORT'), _email_defaults['port'])
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', _email_defaults.get('user', '')).strip()
 if not EMAIL_HOST_USER:
     EMAIL_HOST_USER = os.getenv('SMTP_USER', '').strip()
+if not EMAIL_HOST_USER:
+    EMAIL_HOST_USER = os.getenv('SMTP_USERNAME', '').strip()
+if not EMAIL_HOST_USER:
+    EMAIL_HOST_USER = os.getenv('SMTP_LOGIN', '').strip()
+if not EMAIL_HOST_USER and EMAIL_PROVIDER == 'brevo':
+    EMAIL_HOST_USER = BREVO_SMTP_LOGIN
 
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '').strip()
 if not EMAIL_HOST_PASSWORD:
     EMAIL_HOST_PASSWORD = os.getenv('SMTP_MAIL', '').strip()
+if not EMAIL_HOST_PASSWORD:
+    EMAIL_HOST_PASSWORD = os.getenv('SMTP_PASSWORD', '').strip()
+if not EMAIL_HOST_PASSWORD:
+    EMAIL_HOST_PASSWORD = os.getenv('SMTP_PASS', '').strip()
+if not EMAIL_HOST_PASSWORD:
+    EMAIL_HOST_PASSWORD = os.getenv('SMTP_KEY', '').strip()
+if not EMAIL_HOST_PASSWORD:
+    EMAIL_HOST_PASSWORD = os.getenv('EMAIL_PASSWORD', '').strip()
+if not EMAIL_HOST_PASSWORD:
+    EMAIL_HOST_PASSWORD = os.getenv('EMAIL_APP_PASSWORD', '').strip()
+if not EMAIL_HOST_PASSWORD and EMAIL_PROVIDER == 'brevo':
+    EMAIL_HOST_PASSWORD = BREVO_SMTP_KEY
+
+# If explicit email password is missing but Brevo credentials are present,
+# transparently use Brevo SMTP so OTP delivery can still work.
+if (not EMAIL_HOST_PASSWORD) and BREVO_SMTP_LOGIN and BREVO_SMTP_KEY:
+    EMAIL_PROVIDER = 'brevo'
+    EMAIL_HOST = 'smtp-relay.brevo.com'
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    EMAIL_USE_SSL = False
+    EMAIL_HOST_USER = BREVO_SMTP_LOGIN
+    EMAIL_HOST_PASSWORD = BREVO_SMTP_KEY
 EMAIL_USE_TLS = _to_bool(os.getenv('EMAIL_USE_TLS'), _email_defaults.get('tls', True))
 EMAIL_USE_SSL = _to_bool(os.getenv('EMAIL_USE_SSL'), False)
 if EMAIL_USE_SSL:
     EMAIL_USE_TLS = False
 
 EMAIL_TIMEOUT = _to_int(os.getenv('EMAIL_TIMEOUT'), 30)
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'no-reply@nepstay.com').strip()
+DEFAULT_FROM_EMAIL = (
+    os.getenv('DEFAULT_FROM_EMAIL', '').strip()
+    or os.getenv('SENDER_EMAIL', '').strip()
+    or EMAIL_HOST_USER
+    or 'no-reply@nepstay.com'
+)
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
+
+if not EMAIL_HOST_USER or not EMAIL_HOST_PASSWORD:
+    warnings.warn(
+        'SMTP is not fully configured: set EMAIL_HOST_USER and EMAIL_HOST_PASSWORD in .env for OTP emails.',
+        RuntimeWarning,
+    )
 
 # Used for generating absolute links in email if request object is unavailable.
 SITE_BASE_URL = os.getenv('SITE_BASE_URL', 'http://127.0.0.1:8000').strip()
