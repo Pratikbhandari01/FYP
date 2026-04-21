@@ -1,5 +1,8 @@
 import logging
 import random
+import json
+from urllib import error as urllib_error
+from urllib import request as urllib_request
 
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
@@ -19,6 +22,82 @@ def _set_last_email_error(message: str):
 
 def get_last_email_error() -> str:
     return _LAST_EMAIL_ERROR
+
+
+def _send_via_brevo_api(subject: str, message: str, recipient_email: str) -> bool:
+    api_key = (getattr(settings, 'BREVO_API_KEY', '') or '').strip()
+    if not api_key:
+        return False
+
+    sender_email = (getattr(settings, 'DEFAULT_FROM_EMAIL', '') or '').strip() or (getattr(settings, 'EMAIL_HOST_USER', '') or '').strip()
+    if not sender_email:
+        sender_email = 'no-reply@nepstay.com'
+
+    payload = {
+        'sender': {'email': sender_email},
+        'to': [{'email': recipient_email}],
+        'subject': subject,
+        'textContent': message,
+    }
+
+    data = json.dumps(payload).encode('utf-8')
+    req = urllib_request.Request(
+        url='https://api.brevo.com/v3/smtp/email',
+        data=data,
+        method='POST',
+        headers={
+            'accept': 'application/json',
+            'content-type': 'application/json',
+            'api-key': api_key,
+        },
+    )
+
+    timeout = int(getattr(settings, 'EMAIL_TIMEOUT', 30) or 30)
+    try:
+        with urllib_request.urlopen(req, timeout=timeout) as response:
+            return 200 <= int(getattr(response, 'status', 0)) < 300
+    except urllib_error.HTTPError as exc:
+        try:
+            body = (exc.read() or b'').decode('utf-8', errors='ignore').strip()
+        except Exception:
+            body = ''
+        _set_last_email_error(body or str(exc))
+        logger.exception('Brevo API email send failed with HTTP error')
+        return False
+    except Exception as exc:
+        _set_last_email_error(str(exc))
+        logger.exception('Brevo API email send failed')
+        return False
+
+
+def _send_plain_email(subject: str, message: str, recipient_email: str) -> bool:
+    provider = (getattr(settings, 'EMAIL_PROVIDER', '') or '').strip().lower()
+    brevo_api_key = (getattr(settings, 'BREVO_API_KEY', '') or '').strip()
+
+    # If Brevo API key is available, prefer API-only because SMTP may be disabled pending activation.
+    if brevo_api_key:
+        sent = _send_via_brevo_api(subject, message, recipient_email)
+        if sent:
+            _set_last_email_error('')
+        return sent
+
+    try:
+        _set_last_email_error('')
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[recipient_email],
+            fail_silently=False,
+        )
+        return True
+    except Exception as exc:
+        _set_last_email_error(str(exc))
+        # If SMTP fails and Brevo API was not attempted earlier, try it as backup.
+        if provider == 'brevo' and _send_via_brevo_api(subject, message, recipient_email):
+            _set_last_email_error('')
+            return True
+        return False
 
 
 def _build_absolute_url(path: str, request=None) -> str:
@@ -52,20 +131,11 @@ def send_registration_verification_email(user, request=None) -> bool:
         "If you did not create this account, you can ignore this email.\n"
     )
 
-    try:
-        _set_last_email_error('')
-        send_mail(
-            subject=subject,
-            message=message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user.email],
-            fail_silently=False,
-        )
+    if _send_plain_email(subject, message, user.email):
         return True
-    except Exception as exc:
-        _set_last_email_error(str(exc))
-        logger.exception("Failed to send verification email to user_id=%s", user.pk)
-        return False
+
+    logger.error("Failed to send verification email to user_id=%s: %s", user.pk, get_last_email_error())
+    return False
 
 
 def send_agent_approved_email(user) -> bool:
@@ -81,20 +151,11 @@ def send_agent_approved_email(user) -> bool:
         "NepStay Team\n"
     )
 
-    try:
-        _set_last_email_error('')
-        send_mail(
-            subject=subject,
-            message=message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user.email],
-            fail_silently=False,
-        )
+    if _send_plain_email(subject, message, user.email):
         return True
-    except Exception as exc:
-        _set_last_email_error(str(exc))
-        logger.exception("Failed to send agent approval email to user_id=%s", user.pk)
-        return False
+
+    logger.error("Failed to send agent approval email to user_id=%s: %s", user.pk, get_last_email_error())
+    return False
 
 
 def generate_otp(length: int = 6) -> str:
@@ -115,20 +176,11 @@ def send_email_verification_otp_email(user, otp_code: str) -> bool:
         "If you did not create this account, please ignore this email.\n"
     )
 
-    try:
-        _set_last_email_error('')
-        send_mail(
-            subject=subject,
-            message=message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user.email],
-            fail_silently=False,
-        )
+    if _send_plain_email(subject, message, user.email):
         return True
-    except Exception as exc:
-        _set_last_email_error(str(exc))
-        logger.exception("Failed to send email verification OTP to user_id=%s", user.pk)
-        return False
+
+    logger.error("Failed to send email verification OTP to user_id=%s: %s", user.pk, get_last_email_error())
+    return False
 
 
 def send_password_change_otp_email(user, otp_code: str) -> bool:
@@ -144,20 +196,11 @@ def send_password_change_otp_email(user, otp_code: str) -> bool:
         "If you did not request this change, please ignore this email.\n"
     )
 
-    try:
-        _set_last_email_error('')
-        send_mail(
-            subject=subject,
-            message=message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user.email],
-            fail_silently=False,
-        )
+    if _send_plain_email(subject, message, user.email):
         return True
-    except Exception as exc:
-        _set_last_email_error(str(exc))
-        logger.exception("Failed to send password change OTP to user_id=%s", user.pk)
-        return False
+
+    logger.error("Failed to send password change OTP to user_id=%s: %s", user.pk, get_last_email_error())
+    return False
 
 
 def send_password_reset_otp_email(user, otp_code: str) -> bool:
@@ -173,17 +216,8 @@ def send_password_reset_otp_email(user, otp_code: str) -> bool:
         "If you did not request a password reset, please ignore this email.\n"
     )
 
-    try:
-        _set_last_email_error('')
-        send_mail(
-            subject=subject,
-            message=message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user.email],
-            fail_silently=False,
-        )
+    if _send_plain_email(subject, message, user.email):
         return True
-    except Exception as exc:
-        _set_last_email_error(str(exc))
-        logger.exception("Failed to send password reset OTP email to user_id=%s", user.pk)
-        return False
+
+    logger.error("Failed to send password reset OTP email to user_id=%s: %s", user.pk, get_last_email_error())
+    return False

@@ -8,6 +8,7 @@ from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect
+from django.core.paginator import Paginator
 from django.utils.dateformat import format as date_format
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
@@ -232,13 +233,25 @@ def api_users(request):
     if not _is_admin_user(request.user):
         return _forbidden_json()
 
+    page = _to_int(request.GET.get('page'), 1)
+    if page < 1:
+        page = 1
+    page_size = _to_int(request.GET.get('page_size'), 20)
+    if page_size < 1:
+        page_size = 20
+    page_size = min(page_size, 100)
+
     profile_map = {
         profile.user_id: profile
         for profile in Profile.objects.exclude(identity_image='').select_related('user')
     }
 
     rows = []
-    for user in User.objects.order_by('-date_joined')[:300]:
+    users_qs = User.objects.order_by('-date_joined')
+    paginator = Paginator(users_qs, page_size)
+    page_obj = paginator.get_page(page)
+
+    for user in page_obj.object_list:
         profile = profile_map.get(user.id)
         identity_image_url = ''
         identity_type = '-'
@@ -263,7 +276,17 @@ def api_users(request):
             'date_joined': _serialize_datetime(user.date_joined),
         })
 
-    return JsonResponse({'rows': rows})
+    return JsonResponse({
+        'rows': rows,
+        'pagination': {
+            'page': page_obj.number,
+            'page_size': page_size,
+            'total_pages': paginator.num_pages,
+            'total_rows': paginator.count,
+            'has_previous': page_obj.has_previous(),
+            'has_next': page_obj.has_next(),
+        }
+    })
 
 
 @login_required(login_url='userauths:login')

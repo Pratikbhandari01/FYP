@@ -185,6 +185,11 @@ LOGOUT_REDIRECT_URL = 'hotel:index'
 
 BREVO_SMTP_LOGIN = os.getenv('BREVO_SMTP_LOGIN', '').strip()
 BREVO_SMTP_KEY = os.getenv('BREVO_SMTP_KEY', '').strip()
+BREVO_API_KEY = os.getenv('BREVO_API_KEY', '').strip()
+if not BREVO_API_KEY:
+    BREVO_API_KEY = os.getenv('SENDINBLUE_API_KEY', '').strip()
+if not BREVO_API_KEY:
+    BREVO_API_KEY = os.getenv('BREVO_KEY', '').strip()
 
 # Khalti ePayment configuration
 KHALTI_MODE = os.getenv('KHALTI_MODE', 'test').strip().lower()

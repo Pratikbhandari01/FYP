@@ -71,6 +71,10 @@
     .btn { border:1px solid var(--border); background:#fff; color:#2d4e68; border-radius:999px; padding:5px 10px; font-size:12px; font-weight:800; cursor:pointer; }
     .btn.primary { border-color:#b8d4ea; background:#ecf6ff; color:#1e5078; }
     .btn.danger { border-color:#edc4cb; background:#fff0f2; color:#982e40; }
+    .pager { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:10px; flex-wrap:wrap; }
+    .pager-meta { font-size:12px; color:var(--muted); }
+    .pager-actions { display:flex; gap:6px; align-items:center; }
+    .pager-actions select { border:1px solid var(--border); border-radius:999px; padding:5px 10px; background:#fff; color:#2d4e68; font-size:12px; }
     .muted { color:var(--muted); }
     .modal-wrap { position:fixed; inset:0; display:none; align-items:center; justify-content:center; padding:18px; background:rgba(7,20,33,.45); z-index:1000; }
     .modal-wrap.show { display:flex; }
@@ -170,6 +174,19 @@
           <button class="btn primary" id="addRowBtn" type="button">Add New</button>
         </div>
         <div style="overflow:auto;"><table id="dataTable"></table></div>
+        <div id="pager" class="pager" style="display:none;">
+          <div id="pagerMeta" class="pager-meta"></div>
+          <div class="pager-actions">
+            <label for="pageSize" class="muted">Rows:</label>
+            <select id="pageSize">
+              <option value="10">10</option>
+              <option value="20" selected>20</option>
+              <option value="50">50</option>
+            </select>
+            <button class="btn" id="prevPageBtn" type="button">Previous</button>
+            <button class="btn" id="nextPageBtn" type="button">Next</button>
+          </div>
+        </div>
       </section>
 
       <div class="modal-wrap" id="formModalWrap" role="dialog" aria-modal="true" aria-labelledby="formModalTitle">
@@ -209,8 +226,16 @@ const crudForm = document.getElementById('crudForm');
 const crudFormFields = document.getElementById('crudFormFields');
 const crudFormError = document.getElementById('crudFormError');
 const flashStack = document.getElementById('flashStack');
+const pager = document.getElementById('pager');
+const pagerMeta = document.getElementById('pagerMeta');
+const prevPageBtn = document.getElementById('prevPageBtn');
+const nextPageBtn = document.getElementById('nextPageBtn');
+const pageSizeSelect = document.getElementById('pageSize');
 let currentTab = 'dashboard';
 let activeFormState = null;
+let usersPage = 1;
+let usersPageSize = 20;
+let usersTotalPages = 1;
 
 function showFlash(message, type='success'){
   if(!flashStack || !message){
@@ -524,7 +549,10 @@ async function loadDashboard(){
 
 async function loadModel(tab){
   currentTab = tab;
-  const endpoint = `/admin/api/${tab}/`;
+  let endpoint = `/admin/api/${tab}/`;
+  if(tab === 'users'){
+    endpoint += `?page=${usersPage}&page_size=${usersPageSize}`;
+  }
   dataTable.innerHTML = `<thead><tr><th>Loading...</th></tr></thead><tbody><tr><td class="muted">Fetching ${escapeHtml(prettyTabName(tab))} records...</td></tr></tbody>`;
 
   let payload;
@@ -536,6 +564,20 @@ async function loadModel(tab){
   }
 
   const rows = payload.rows || [];
+  if(tab === 'users'){
+    const p = payload.pagination || {};
+    usersPage = Number(p.page || usersPage);
+    usersPageSize = Number(p.page_size || usersPageSize);
+    usersTotalPages = Math.max(1, Number(p.total_pages || 1));
+
+    pager.style.display = '';
+    pagerMeta.textContent = `Page ${usersPage} of ${usersTotalPages} | Total users: ${Number(p.total_rows || rows.length)}`;
+    pageSizeSelect.value = String(usersPageSize);
+    prevPageBtn.disabled = !Boolean(p.has_previous);
+    nextPageBtn.disabled = !Boolean(p.has_next);
+  } else {
+    pager.style.display = 'none';
+  }
 
   let headers = [];
   let htmlRows = [];
@@ -582,6 +624,30 @@ async function loadModel(tab){
   dataTable.innerHTML = buildTable(headers, htmlRows);
   addRowBtn.style.display = tab === 'dashboard' ? 'none' : '';
 }
+
+prevPageBtn.addEventListener('click', async () => {
+  if(currentTab !== 'users' || usersPage <= 1){
+    return;
+  }
+  usersPage -= 1;
+  await loadModel('users');
+});
+
+nextPageBtn.addEventListener('click', async () => {
+  if(currentTab !== 'users' || usersPage >= usersTotalPages){
+    return;
+  }
+  usersPage += 1;
+  await loadModel('users');
+});
+
+pageSizeSelect.addEventListener('change', async () => {
+  usersPageSize = Number(pageSizeSelect.value || 20);
+  usersPage = 1;
+  if(currentTab === 'users'){
+    await loadModel('users');
+  }
+});
 
 async function postJson(url, body={}){
   const res = await fetch(url, {method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});

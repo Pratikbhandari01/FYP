@@ -81,15 +81,8 @@ def _clear_email_verify_otp_session(request):
 
 
 def _queue_email_verify_otp(request, user):
-    otp_code = generate_otp(6)
-    expires_at = timezone.now() + timedelta(minutes=10)
-
-    request.session['email_verify_user_id'] = user.id
-    request.session['email_verify_otp_hash'] = _hash_email_verify_otp(otp_code)
-    request.session['email_verify_otp_expires_at'] = expires_at.isoformat()
-    request.session['email_verify_otp_attempts'] = 0
-
-    return otp_code
+    # Email verification OTP no longer used
+    return None
 
 
 def _start_email_verification_flow(request, user):
@@ -141,7 +134,11 @@ def _mask_email(email):
 
 
 def _email_smtp_ready():
-    return bool(settings.EMAIL_HOST_USER and settings.EMAIL_HOST_PASSWORD)
+    if settings.EMAIL_HOST_USER and settings.EMAIL_HOST_PASSWORD:
+        return True
+    provider = (getattr(settings, 'EMAIL_PROVIDER', '') or '').strip().lower()
+    brevo_api_key = (getattr(settings, 'BREVO_API_KEY', '') or '').strip()
+    return provider == 'brevo' and bool(brevo_api_key)
 
 
 def _smtp_failure_message():
@@ -204,11 +201,11 @@ def RegisterView(request):
             if user.role == "agent":
                 messages.info(request, "Your agent account is submitted for admin review. Please wait for approval.")
 
-            if not _email_smtp_ready():
-                messages.error(request, 'SMTP is not configured. Set EMAIL_HOST_USER and EMAIL_HOST_PASSWORD in .env.')
-                return redirect('userauths:register')
+            # Auto-verify email on registration (no OTP required)
+            user.email_verified = True
+            user.save(update_fields=['email_verified'])
             
-            return _start_email_verification_flow(request, user)
+            return redirect('userauths:login')
     else:
         form = UserRegistrationForm()
 
@@ -297,76 +294,10 @@ def forgot_password_view(request):
 
 
 def verify_email_otp_view(request):
-    user_id = request.session.get('email_verify_user_id')
-    otp_hash = request.session.get('email_verify_otp_hash')
-    expires_raw = request.session.get('email_verify_otp_expires_at')
-
-    if not user_id or not otp_hash or not expires_raw:
-        messages.warning(request, 'Your email verification session has expired. Please login again.')
-        return redirect('userauths:login')
-
-    user = User.objects.filter(pk=user_id).first()
-    if not user:
-        _clear_email_verify_otp_session(request)
-        messages.error(request, 'User not found. Please login again.')
-        return redirect('userauths:login')
-
-    if user.email_verified:
-        _clear_email_verify_otp_session(request)
-        messages.success(request, 'Your email is already verified.')
-        return _post_login_redirect(request, user)
-
-    try:
-        expires_at = timezone.datetime.fromisoformat(expires_raw)
-        if timezone.is_naive(expires_at):
-            expires_at = timezone.make_aware(expires_at, timezone.get_current_timezone())
-    except ValueError:
-        _clear_email_verify_otp_session(request)
-        messages.error(request, 'Invalid verification session. Please login again.')
-        return redirect('userauths:login')
-
-    if timezone.now() > expires_at:
-        _clear_email_verify_otp_session(request)
-        messages.error(request, 'Verification OTP has expired. Please login again to request a new OTP.')
-        return redirect('userauths:login')
-
-    if request.method == 'POST' and request.POST.get('action') == 'resend':
-        otp_code = _queue_email_verify_otp(request, user)
-        if send_email_verification_otp_email(user, otp_code):
-            messages.success(request, 'A new verification OTP has been sent to your email.')
-        else:
-            messages.error(request, _smtp_failure_message())
-        return redirect('userauths:verify_email_otp')
-
-    if request.method == 'POST':
-        submitted_otp = (request.POST.get('otp') or '').strip()
-        attempts = int(request.session.get('email_verify_otp_attempts', 0))
-
-        if attempts >= 5:
-            _clear_email_verify_otp_session(request)
-            messages.error(request, 'Too many invalid attempts. Please login again.')
-            return redirect('userauths:login')
-
-        if _hash_email_verify_otp(submitted_otp) != otp_hash:
-            request.session['email_verify_otp_attempts'] = attempts + 1
-            remaining = max(0, 5 - (attempts + 1))
-            messages.error(request, f'Invalid OTP. {remaining} attempt(s) remaining.')
-            return redirect('userauths:verify_email_otp')
-
-        user.email_verified = True
-        user.save(update_fields=['email_verified'])
-        _clear_email_verify_otp_session(request)
-        messages.success(request, 'Your email has been verified successfully.')
-        return _post_login_redirect(request, user)
-
-    return render(
-        request,
-        'userauths/verify_email_otp.html',
-        {
-            'masked_email': _mask_email(user.email),
-            'otp_expiry_minutes': 10,
-        },
-    )
+    # Email verification after registration doesn't require OTP
+    # Just redirect to login
+    messages.info(request, 'Account created successfully. Please log in.')
+    return redirect('userauths:login')
 
 
 def verify_password_reset_otp_view(request):
