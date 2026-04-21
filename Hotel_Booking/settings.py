@@ -218,8 +218,12 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 _email_provider_env = os.getenv('EMAIL_PROVIDER', '').strip().lower()
 _smtp_host_hint = os.getenv('SMTP_HOST', '').strip().lower()
 _smtp_login_hint = os.getenv('SMTP_LOGIN', '').strip().lower()
+_gmail_user_hint = os.getenv('GMAIL_USER', '').strip().lower() or os.getenv('GMAIL_EMAIL', '').strip().lower()
+_gmail_password_hint = os.getenv('GMAIL_APP_PASSWORD', '').strip() or os.getenv('GMAIL_PASSWORD', '').strip()
 if _email_provider_env:
     EMAIL_PROVIDER = _email_provider_env
+elif _gmail_user_hint or _gmail_password_hint:
+    EMAIL_PROVIDER = 'gmail'
 elif BREVO_SMTP_LOGIN or BREVO_SMTP_KEY or 'brevo' in _smtp_host_hint or 'smtp-brevo.com' in _smtp_login_hint:
     EMAIL_PROVIDER = 'brevo'
 else:
@@ -255,6 +259,10 @@ if not EMAIL_HOST_USER:
     EMAIL_HOST_USER = os.getenv('SMTP_USERNAME', '').strip()
 if not EMAIL_HOST_USER:
     EMAIL_HOST_USER = os.getenv('SMTP_LOGIN', '').strip()
+if not EMAIL_HOST_USER:
+    EMAIL_HOST_USER = os.getenv('GMAIL_USER', '').strip()
+if not EMAIL_HOST_USER:
+    EMAIL_HOST_USER = os.getenv('GMAIL_EMAIL', '').strip()
 if not EMAIL_HOST_USER and EMAIL_PROVIDER == 'brevo':
     EMAIL_HOST_USER = BREVO_SMTP_LOGIN
 
@@ -271,6 +279,10 @@ if not EMAIL_HOST_PASSWORD:
     EMAIL_HOST_PASSWORD = os.getenv('EMAIL_PASSWORD', '').strip()
 if not EMAIL_HOST_PASSWORD:
     EMAIL_HOST_PASSWORD = os.getenv('EMAIL_APP_PASSWORD', '').strip()
+if not EMAIL_HOST_PASSWORD:
+    EMAIL_HOST_PASSWORD = os.getenv('GMAIL_APP_PASSWORD', '').strip()
+if not EMAIL_HOST_PASSWORD:
+    EMAIL_HOST_PASSWORD = os.getenv('GMAIL_PASSWORD', '').strip()
 if not EMAIL_HOST_PASSWORD and EMAIL_PROVIDER == 'brevo':
     EMAIL_HOST_PASSWORD = BREVO_SMTP_KEY
 
@@ -300,7 +312,7 @@ SERVER_EMAIL = DEFAULT_FROM_EMAIL
 
 if not EMAIL_HOST_USER or not EMAIL_HOST_PASSWORD:
     warnings.warn(
-        'SMTP is not fully configured: set EMAIL_HOST_USER and EMAIL_HOST_PASSWORD in .env for OTP emails.',
+        'SMTP is not fully configured: set EMAIL_HOST_USER and EMAIL_HOST_PASSWORD (or GMAIL_USER and GMAIL_APP_PASSWORD) in .env for OTP emails.',
         RuntimeWarning,
     )
 
